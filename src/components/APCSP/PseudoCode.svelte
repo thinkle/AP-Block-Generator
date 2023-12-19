@@ -58,6 +58,8 @@
       <IfStatement {node}></IfStatement>
     {:else if node.element == "mathExpression"}
       <MathExpression {node}></MathExpression>
+    {:else if node.element == "parentheses"}
+      (<svelte:self node={node.expression} />)
     {:else if node.element == "repeatN"}
       <RepeatN {node} />
     {:else if node.element == "forEach"}

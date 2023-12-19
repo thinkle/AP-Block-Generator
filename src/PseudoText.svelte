@@ -56,6 +56,9 @@
       if (node.element === "empty") {
         return "";
       }
+      if (node.element === "parentheses") {
+        return `(${processParsedIntoText(node.expression, indentLevel)})`;
+      }
       if (node.element === "mathExpression") {
         return `${processParsedIntoText(node.left, indentLevel)} ${
           node.operator
@@ -149,8 +152,4 @@
 
 <pre>
   {text}
-</pre>
-Raw:
-<pre>
-  {JSON.stringify(node)}
 </pre>

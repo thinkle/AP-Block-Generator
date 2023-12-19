@@ -75,6 +75,7 @@ const nodeHandlers: Record<TS.SyntaxKind, NodeHandler> = {
   [TS.SyntaxKind.PropertyAccessExpression]: handlePropertyAccessExpression,
   [TS.SyntaxKind.PrefixUnaryExpression]: handlePrefixUnaryExpression,
   [TS.SyntaxKind.PostfixUnaryExpression]: handlePostfixUnaryExpression,
+  [TS.SyntaxKind.ParenthesizedExpression]: handleParenthesizedExpression,
   [TS.SyntaxKind.TrueKeyword]: () => ({
     element: "value",
     type: "boolean",
@@ -298,6 +299,11 @@ const methodHandlers = {
     args: ExpressionElement[],
     fullNode: TS.Node
   ) => treatAsOutput(args),
+  prompt: (
+    objectNode: TS.LeftHandSideExpression,
+    args: ExpressionElement[],
+    fullNode: TS.Node
+  ) => treatAsInput(args),
 };
 
 function handleCallExpression(node: TS.Node): ProcedureCall {
@@ -340,7 +346,7 @@ function handleBinaryExpression(node: TS.Node): MathExpression {
   const operator = node.getOperatorToken().getText();
   const right = processNode(node.getRight()) as ExpressionElement;
 
-  if (operator.length == 2 && operator[1] == "=") {
+  if (["+=", "-=", "*=", "/=", "%="].includes(operator)) {
     console.log("Long operator", operator);
     let apCspOperator = translateOperator(operator[0]);
     return {
@@ -398,6 +404,8 @@ function translateOperator(operator: string): string {
       return "or";
     case "=":
       return "←";
+    case "%":
+      return "MOD";
     default:
       return operator;
   }
@@ -623,4 +631,17 @@ function handlePostfixUnaryExpression(
       },
     };
   }
+}
+
+function handleParenthesizedExpression(
+  node: TS.ParenthesizedExpression
+): ParenthesizedExpression {
+  if (!TS.Node.isParenthesizedExpression(node)) {
+    throw new Error("Node is not a Parenthesized Expression");
+  }
+
+  return {
+    element: "parentheses",
+    expression: processNode(node.getExpression()),
+  };
 }

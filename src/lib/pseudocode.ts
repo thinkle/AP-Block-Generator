@@ -11,12 +11,14 @@ export type StatementElement =
   | WhileLoopExpression
   | ForEachExpression
   | RepeatExpression
+  | ParenthesizedExpression
   | GenericForExpression
   | ProcedureDefinition; // Add other statement types as needed
 export type ExpressionElement =
   | Value
   | Variable
   | MathExpression
+  | ParenthesizedExpression
   | ListIndex
   | List; // Add other expression types as needed
 export type AnyElement = StatementElement | ExpressionElement | Block;
@@ -137,4 +139,9 @@ export interface ListLengthCall extends CodeElement {
 export interface Block extends CodeElement {
   element: "block";
   children: StatementElement[];
+}
+
+export interface ParenthesizedExpression extends CodeElement {
+  element: "parentheses";
+  expression: ExpressionElement;
 }
