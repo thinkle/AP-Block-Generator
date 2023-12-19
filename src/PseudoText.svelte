@@ -56,6 +56,12 @@
       if (node.element === "empty") {
         return "";
       }
+      if (node.element === "returnStatement") {
+        return `${indent(i)}RETURN ${processParsedIntoText(
+          node.value,
+          indentLevel
+        )}`;
+      }
       if (node.element === "parentheses") {
         return `(${processParsedIntoText(node.expression, indentLevel)})`;
       }

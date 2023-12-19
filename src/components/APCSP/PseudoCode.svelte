@@ -1,4 +1,6 @@
 <script lang="ts">
+  import ReturnStatement from "./ReturnStatement.svelte";
+
   import ForEach from "./ForEach.svelte";
 
   import ListIndex from "./ListIndex.svelte";
@@ -46,6 +48,8 @@
       {:else}
         <span class="value">{node.value}</span>
       {/if}
+    {:else if node.element == "returnStatement"}
+      <ReturnStatement {node} />
     {:else if node.element == "listIndexElement"}
       <ListIndexValue node={node.value} />
     {:else if node.element == "listIndex"}
