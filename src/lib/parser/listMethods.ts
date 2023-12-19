@@ -5,11 +5,15 @@ import type {
   Value,
   ForEachExpression,
   Block,
+  MathExpression,
+  ReturnStatement,
+  StatementElement,
+  AnyElement,
+  List,
 } from "../pseudocode";
 import { ASSIGN, processNode } from ".";
 import { handleArrowFunction } from "./handleArrowFunction";
 import { handleFunctionDeclaration } from "./handleFunctionDeclaration";
-import type MathExpression from "../../components/APCSP/MathExpression.svelte";
 
 export const push = (
   objectNode: TS.LeftHandSideExpression,
@@ -65,47 +69,13 @@ export const forEach = (
   let tsArgs = fullNode.getArguments();
 
   const callbackFunction = tsArgs[0];
-  let itemVariableName, bodyNodes;
-
-  if (
-    TS.Node.isArrowFunction(callbackFunction) ||
-    TS.Node.isFunctionExpression(callbackFunction)
-  ) {
-    // Arrow function or anonymous function
-    const parameters = callbackFunction.getParameters();
-    if (parameters.length === 0) {
-      throw new Error("Expected at least one parameter in forEach callback");
-    }
-    itemVariableName = parameters[0].getName();
-    // This works if we have a body {} -- but what about a one-liner arrow
-    // function? We need to handle that case too.
-    if (TS.Node.isBlock(callbackFunction.getBody())) {
-      bodyNodes = callbackFunction.getBody().getStatements().map(processNode);
-    } else {
-      bodyNodes = [processNode(callbackFunction.getBody())];
-    }
-  } else if (TS.Node.isIdentifier(callbackFunction)) {
-    // Named function
-    itemVariableName = "item"; // Arbitrary name for item variable
-    bodyNodes = [
-      {
-        element: "procedureCall",
-        name: callbackFunction.getText(),
-        args: [{ element: "variable", name: itemVariableName }],
-      },
-    ];
-  } else {
-    return false; // Unsupported callback type
-  }
+  let [body, itemVariableName] = getBodyAndVarFromFunction(callbackFunction);
 
   return {
     element: "forEach",
     list: processNode(objectNode),
     itemVariable: itemVariableName,
-    body: {
-      element: "block",
-      children: bodyNodes,
-    },
+    body,
   };
 }; /*  End forEach! */
 
@@ -117,86 +87,24 @@ export const map = (
   let mapArg = fullNode.getArguments()[0];
 
   // Find what's on the "lefthand side" of the map call
-  // I'll need to keep track of this quite a lot...
-  // Find the left-hand side of the assignment (if it exists)
-  // Find the context of the map call (assignment, variable declaration, etc.)
-  const binaryExpression = fullNode.getFirstAncestorByKind(
-    TS.SyntaxKind.BinaryExpression
-  );
-  const variableDeclaration = fullNode.getFirstAncestorByKind(
-    TS.SyntaxKind.VariableDeclaration
-  );
-  const elementAccessExpression = fullNode.getFirstAncestorByKind(
-    TS.SyntaxKind.ElementAccessExpression
-  );
-  const propertyAccessExpression = fullNode.getFirstAncestorByKind(
-    TS.SyntaxKind.PropertyAccessExpression
-  );
+  // (e.g. "let doubled = [1,2,3].map(double);")
+  // I'll need this to transform subsequent calls to e.g.
+  // APPEND(doubled, double(item))
+  let {
+    leftHandSideVariable,
+    addAssignment,
+  }: { leftHandSideVariable: string; addAssignment: boolean } =
+    getLeftSideVariable(fullNode);
 
-  let leftHandSideVariable: string;
-  let addAssignment = false;
+  // Get body and item variable name from the callback function
+  // (e.g. "(item) => item * item") gives me
+  // item and the block with return item * item;
+  let [body, itemVariableName] = getBodyAndVarFromFunction(mapArg);
 
-  if (binaryExpression) {
-    leftHandSideVariable = binaryExpression.getLeft().getText();
-  } else if (variableDeclaration) {
-    leftHandSideVariable = variableDeclaration.getName();
-  } else if (elementAccessExpression) {
-    leftHandSideVariable = elementAccessExpression.getText();
-  } else if (propertyAccessExpression) {
-    leftHandSideVariable = propertyAccessExpression.getText();
-  } else {
-    leftHandSideVariable = generateUniqueVariableName();
-    addAssignment = true;
-  }
-  // We're first going to return an empty list...
-  var body: Block;
-  let itemVariableName = "item";
-  if (TS.Node.isArrowFunction(mapArg)) {
-    body = handleArrowFunction("anon", mapArg).body;
-
-    itemVariableName = mapArg.getParameters()[0].getName();
-  } else if (TS.Node.isFunctionExpression(mapArg)) {
-    let statements = mapArg.getBody()?.getStatements();
-    let nodes = statements.map(processNode);
-    itemVariableName = mapArg.getParameters()[0].getName();
-    body = {
-      element: "block",
-      children: nodes,
-    };
-  } else if (TS.Node.isIdentifier(mapArg)) {
-    // Named function
-    body = {
-      element: "block",
-      children: [
-        {
-          element: "procedureCall",
-          name: "APPEND",
-          args: [
-            {
-              element: "variable",
-              name: leftHandSideVariable,
-            },
-            {
-              element: "procedureCall",
-              name: mapArg.getText(),
-              args: [{ element: "variable", name: itemVariableName }],
-            },
-          ],
-        },
-      ],
-    };
-  }
-
-  // when traversing a function body, we have to handle...
-  // IF statement (consequent / alternate)
-  // Loops (have a body)
-  // And Block (have children)
-  // Any time we find a element of type 'returnStatement'
-  // we call APPEND instead of returning using the lefthand side
-  // from above
-
-  const crawlAndReplaceReturnStatements = (node: ExpressionElement) => {
-    if (node.element === "returnStatement") {
+  /* Change all return statements from function into APPEND statements */
+  crawlAndTransformReturnStatements(
+    body,
+    (node: ReturnStatement | ProcedureCall) => {
       node.element = "procedureCall";
       node.name = "APPEND";
       node.args = [
@@ -206,21 +114,16 @@ export const map = (
         },
         node.value,
       ];
-    } else if (node.element === "block") {
-      node.children.forEach(crawlAndReplaceReturnStatements);
-    } else if (["forEach", "whileLoop", "repeatN"].includes(node.element)) {
-      crawlAndReplaceReturnStatements(node.body);
-    } else if (node.element === "ifStatement") {
-      crawlAndReplaceReturnStatements(node.consequent);
-      if (node.alternate) {
-        crawlAndReplaceReturnStatements(node.alternate);
-      }
     }
-  };
+  );
 
-  crawlAndReplaceReturnStatements(body);
-
-  let firstItem: Value | MathExpression = {
+  // We are going to transform ourselves into an empty list
+  // so that what was
+  // let foo = [1,2,3].map(double);
+  // becomes
+  // let foo = [];
+  // (and then we'll add the loop...)
+  let firstItem: List | MathExpression = {
     element: "value",
     type: "list",
     value: [],
@@ -256,4 +159,267 @@ export const map = (
   ];
 };
 
-export const filter = () => {};
+export const filter = (
+  objectNode: TS.LeftHandSideExpression,
+  args: ExpressionElement[],
+  fullNode: TS.CallExpression
+) => {
+  let filterArg = fullNode.getArguments()[0];
+
+  // Same as for 'map', we need to know where the result of 'filter' is being stored
+  let {
+    leftHandSideVariable,
+    addAssignment,
+  }: { leftHandSideVariable: string; addAssignment: boolean } =
+    getLeftSideVariable(fullNode);
+
+  // Get body and item variable name from the filter function
+  let [body, itemVariableName] = getBodyAndVarFromFunction(filterArg);
+
+  /* Change all return statements from function into conditional APPEND statements */
+  crawlAndTransformReturnStatements(
+    body,
+    (node: ReturnStatement | ProcedureCall) => {
+      node.element = "ifStatement"; // Using an if statement to conditionally append
+      node.condition = node.value; // The condition is the return value of the filter callback
+      node.consequent = {
+        element: "block",
+        children: [
+          {
+            element: "procedureCall",
+            name: "APPEND",
+            args: [
+              {
+                element: "variable",
+                name: leftHandSideVariable,
+              },
+              {
+                element: "variable",
+                name: itemVariableName, // We append the current item being filtered
+              },
+            ],
+          },
+        ],
+      };
+      delete node.value; // Remove the value property as it's now part of the condition
+    }
+  );
+
+  // Set up the initial empty list for the 'filter' result
+  let firstItem: List | MathExpression = {
+    element: "value",
+    type: "list",
+    value: [],
+  };
+  if (addAssignment) {
+    firstItem = {
+      element: "mathExpression",
+      left: {
+        element: "variable",
+        name: leftHandSideVariable,
+      },
+      operator: ASSIGN,
+      right: {
+        element: "value",
+        type: "list",
+        value: [],
+      },
+    };
+  }
+
+  // Create the forEach loop structure to iterate and conditionally append items
+  return [
+    firstItem,
+    {
+      element: "breakOut",
+      levelUp: 1,
+    },
+    {
+      element: "forEach",
+      list: processNode(objectNode),
+      itemVariable: itemVariableName,
+      body,
+    },
+  ];
+};
+
+export const reduce = (
+  objectNode: TS.LeftHandSideExpression,
+  args: ExpressionElement[],
+  fullNode: TS.CallExpression
+) => {
+  let reduceCallback = fullNode.getArguments()[0];
+  let initialValue = fullNode.getArguments()[1]; // The second argument is the initial value for the accumulator
+
+  // Get left-hand side variable name from the parent node or create a unique name
+  let { leftHandSideVariable, addAssignment } = getLeftSideVariable(fullNode);
+
+  // Get the body of the reduce function and the names of the accumulator and current item
+  let [body, accumulatorVariableName, itemVariableName] =
+    getBodyAndVarFromFunction(reduceCallback);
+
+  // Transform return statements in the reduce function body into direct assignments to the accumulator
+  crawlAndTransformReturnStatements(
+    body,
+    (node: ReturnStatement | ProcedureCall) => {
+      node.element = "mathExpression";
+      node.operator = ASSIGN;
+      node.left = {
+        element: "variable",
+        name: accumulatorVariableName,
+      };
+      node.right = node.value;
+    }
+  );
+
+  // If the result of the reduce function is being assigned, ensure we capture that
+  return [
+    // First off, set our initial value...
+    processNode(initialValue),
+    {
+      element: "breakOut",
+      levelUp: 1,
+    }, // Then we "break out for the rest..."
+    // Assign initial value to accumulator...
+    {
+      element: "mathExpression",
+      operator: ASSIGN,
+      left: { element: "variable", name: accumulatorVariableName },
+      right: processNode(initialValue) as ExpressionElement,
+    },
+    {
+      element: "forEach",
+      list: processNode(objectNode),
+      itemVariable: itemVariableName,
+      body,
+    },
+    // Finally, we set our left hand side to the accumulator...
+    {
+      element: "mathExpression",
+      operator: ASSIGN,
+      left: { element: "variable", name: leftHandSideVariable },
+      right: { element: "variable", name: accumulatorVariableName },
+    },
+  ];
+};
+
+function getBodyAndVarFromFunction(node: TS.Node) {
+  let body: Block;
+  let itemVariableName: string = "item";
+  let secondVariableName: string = "";
+  if (TS.Node.isArrowFunction(node)) {
+    body = handleArrowFunction("anon", node).body;
+    itemVariableName = node.getParameters()[0].getName();
+    secondVariableName = node.getParameters()[1]?.getName();
+  } else if (TS.Node.isFunctionExpression(node)) {
+    let statements = node.getBody()?.getStatements();
+    let nodes = statements.map(processNode);
+    itemVariableName = node.getParameters()[0].getName();
+    secondVariableName = node.getParameters()[1]?.getName();
+    body = {
+      element: "block",
+      children: nodes,
+    };
+  } else if (TS.Node.isIdentifier(node)) {
+    // Named function
+    body = {
+      element: "block",
+      children: [
+        {
+          element: "returnStatement",
+          value: {
+            element: "procedureCall",
+            name: node.getText(),
+            args: [{ element: "variable", name: itemVariableName }],
+          },
+        },
+      ],
+    };
+  } else if (TS.Node.isPropertyAccessExpression(node)) {
+    let functionName = node.getText();
+    if (["console.log", "window.alert"].includes(functionName)) {
+      functionName = "OUTPUT";
+    } else if (["window.prompt"].includes(functionName)) {
+      functionName = "INPUT";
+    }
+    body = {
+      element: "block",
+      children: [
+        {
+          element: "returnStatement",
+          value: {
+            element: "procedureCall",
+            name: functionName,
+            args: [{ element: "variable", name: itemVariableName }],
+          },
+        },
+      ],
+    };
+  } else {
+    throw new Error("Unsupported callback type");
+  }
+  return [body, itemVariableName, secondVariableName];
+}
+
+function getLeftSideVariable(
+  fullNode: TS.CallExpression<TS.ts.CallExpression>
+) {
+  const binaryExpression = fullNode.getFirstAncestorByKind(
+    TS.SyntaxKind.BinaryExpression
+  );
+  const variableDeclaration = fullNode.getFirstAncestorByKind(
+    TS.SyntaxKind.VariableDeclaration
+  );
+  const elementAccessExpression = fullNode.getFirstAncestorByKind(
+    TS.SyntaxKind.ElementAccessExpression
+  );
+  const propertyAccessExpression = fullNode.getFirstAncestorByKind(
+    TS.SyntaxKind.PropertyAccessExpression
+  );
+
+  let leftHandSideVariable: string;
+  let addAssignment = false;
+
+  if (binaryExpression) {
+    leftHandSideVariable = binaryExpression.getLeft().getText();
+  } else if (variableDeclaration) {
+    leftHandSideVariable = variableDeclaration.getName();
+  } else if (elementAccessExpression) {
+    leftHandSideVariable = elementAccessExpression.getText();
+  } else if (propertyAccessExpression) {
+    leftHandSideVariable = propertyAccessExpression.getText();
+  } else {
+    leftHandSideVariable = generateUniqueVariableName();
+    addAssignment = true;
+  }
+  return { leftHandSideVariable, addAssignment };
+}
+
+const crawlAndTransformReturnStatements = (
+  node: AnyElement,
+  transformer: (statement: ReturnStatement) => void
+) => {
+  /* Transform all "returnStatements" in node */
+  if (node.element === "returnStatement") {
+    transformer(node);
+  } else if (node.element === "block") {
+    /* Crawl sub-blocks */
+    node.children.forEach((c) =>
+      crawlAndTransformReturnStatements(c, transformer)
+    );
+  } else if (["forEach", "whileLoop", "repeatN"].includes(node.element)) {
+    /* Crawl nested loops */
+    crawlAndTransformReturnStatements(node.body, transformer);
+  } else if (node.element === "ifStatement") {
+    /* Crawl nested if statements */
+    crawlAndTransformReturnStatements(node.consequent, transformer);
+    if (node.alternate) {
+      /* Crawl nested else */
+      crawlAndTransformReturnStatements(node.alternate, transformer);
+    }
+  }
+};
+
+function generateUniqueVariableName(): string {
+  return "list" + Math.floor(Math.random() * 100000);
+}
