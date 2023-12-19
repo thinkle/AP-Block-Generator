@@ -1,6 +1,6 @@
 import * as TS from "ts-morph";
 import type { MathExpression } from "./pseudocode";
-import { processNode, translateOperatorToken } from ".";
+import { processNode } from ".";
 
 export function translateOperatorToken(token: number): string {
   switch (token) {
