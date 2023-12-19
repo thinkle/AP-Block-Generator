@@ -12,6 +12,7 @@
 
   let parsed: AnyElement | AnyElement[] = [];
   $: parsed = parseCode($code);
+  $: console.log("parsed: ", parsed);
   let showResult = false;
 </script>
 
