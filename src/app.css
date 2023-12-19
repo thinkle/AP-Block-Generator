@@ -26,6 +26,8 @@
   margin: 3px;
   border-radius: 0;
   padding: 8px;
+  display: inline-flex;
+  align-items: center;
   border: 2px solid #333;
 }
 .keyword {
@@ -39,5 +41,6 @@
 }
 .value.list {
   display: inline-flex;
+  align-items: center;
   flex-wrap: wrap;
 }
