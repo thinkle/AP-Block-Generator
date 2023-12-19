@@ -131,6 +131,9 @@
         /* Generic handler for "children" */
       }
       if (node.element === "block") {
+        if (!node.children) {
+          return "";
+        }
         let text = `\n${indent(i)}{`;
         for (let child of node.children) {
           text += `\n${indent(i + 1)}${processParsedIntoText(
@@ -152,7 +155,12 @@
     }
   }
 
-  $: text = processParsedIntoText(node);
+  $: try {
+    text = processParsedIntoText(node);
+  } catch (err) {
+    console.error(err);
+    text = "Error: " + err;
+  }
   $: console.log("Wrote: ", text);
 </script>
 
