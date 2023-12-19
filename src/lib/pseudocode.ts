@@ -19,6 +19,7 @@ export type ExpressionElement =
   | Variable
   | MathExpression
   | ParenthesizedExpression
+  | ProcedureCall
   | ListIndex
   | List; // Add other expression types as needed
 export type AnyElement = StatementElement | ExpressionElement | Block;

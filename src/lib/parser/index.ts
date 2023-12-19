@@ -24,6 +24,7 @@ import { handlePostfixUnaryExpression } from "./handlePostfixUnaryExpression";
 import { handleParenthesizedExpression } from "./handleParenthesizedExpression";
 import { handleArrayLiteralExpression } from "./handleArrayLiteralExpression";
 import { handleIfStatement } from "./handleIfStatement";
+import { transformTreeWithBreakout } from "./breakout";
 
 type NodeHandler = (node: TS.Node) => AnyElement;
 export const ASSIGN = "←";
@@ -31,15 +32,18 @@ export function parseCode(code: string): AnyElement {
   const project = new TS.Project({ useInMemoryFileSystem: true });
   const sourceFile = project.createSourceFile("temp.ts", code);
   try {
-    let result = processNode(sourceFile, nodeHandlers);
-    if (Array.isArray(result)) {
-      return {
+    let ogResult = processNode(sourceFile, nodeHandlers);
+
+    if (Array.isArray(ogResult)) {
+      ogResult = {
         element: "code",
-        children: result,
+        children: ogResult,
       };
-    } else {
-      return result;
     }
+    console.log("ogResult", JSON.parse(JSON.stringify(ogResult)));
+    transformTreeWithBreakout(ogResult);
+    console.log("transformed => ", ogResult);
+    return ogResult;
   } catch (err) {
     console.log("Error processing code", err);
     console.log("Code was: ", code);
@@ -88,6 +92,23 @@ const nodeHandlers: Record<TS.SyntaxKind, NodeHandler> = {
     type: "boolean",
     value: "false",
   }),
+  [TS.SyntaxKind.ReturnStatement]: (node) => {
+    const returnStatement = node as TS.ReturnStatement;
+    const expression = returnStatement.getExpression();
+    if (expression) {
+      return {
+        element: "return",
+        value: processNode(expression),
+      };
+    } else {
+      return {
+        element: "return",
+        value: {
+          element: "empty",
+        },
+      };
+    }
+  },
   // ... Add more handlers as needed
 };
 

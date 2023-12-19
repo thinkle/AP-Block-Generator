@@ -5,7 +5,7 @@ import { processNode } from ".";
 
 export function handleArrowFunction(
   name: string,
-  initializer: Expression
+  initializer: TS.ArrowFunction
 ): ProcedureDefinition {
   const args = initializer.getParameters().map((param) => param.getName());
   let steps: StatementElement[];
