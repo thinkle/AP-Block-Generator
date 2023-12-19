@@ -1,0 +1,43 @@
+.line {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.round-block {
+  border-radius: 16px;
+  padding: 8px;
+  border: 2px solid #333;
+}
+
+.rounded-inline {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
+  padding: 8px;
+  border: 1px solid #333;
+}
+
+.condition {
+  border-radius: 32px;
+}
+
+.square-block {
+  margin: 3px;
+  border-radius: 0;
+  padding: 8px;
+  border: 2px solid #333;
+}
+.keyword {
+  font-weight: bold;
+}
+.white {
+  background-color: white;
+}
+.shaded {
+  background-color: #cdc4c4;
+}
+.value.list {
+  display: inline-flex;
+  flex-wrap: wrap;
+}
