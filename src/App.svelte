@@ -5,7 +5,7 @@
   import CodeMirror from "./components/CodeMirror.svelte";
   import { javascript } from "@codemirror/lang-javascript";
   import { code } from "./stores/work";
-  import { parseCode } from "./lib/parseCode";
+  import { parseCode } from "./lib/parser/index";
   import PseudoCode from "./components/APCSP/PseudoCode.svelte";
   import type { AnyElement } from "./lib/pseudocode";
   import CodeResult from "./components/CodeResult.svelte";
