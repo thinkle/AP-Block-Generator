@@ -1,6 +1,8 @@
 import * as TS from "ts-morph";
 import type { MathExpression, ExpressionElement } from "./pseudocode";
 import { processNode, ASSIGN } from ".";
+import type ProcedureCall from "../../components/APCSP/ProcedureCall.svelte";
+import { isStringType } from "./utils/isStringType";
 
 export function translateOperator(operator: string): string {
   switch (operator) {
@@ -28,14 +30,27 @@ export function translateOperator(operator: string): string {
   }
 }
 /* Can we add correct type definitions here  - these will all return ProcedureCall */
-export function handleBinaryExpression(node: TS.Node): MathExpression {
+export function handleBinaryExpression(
+  node: TS.Node
+): MathExpression | ProcedureCall {
   if (!TS.Node.isBinaryExpression(node)) {
     throw new Error("Node is not a Binary Expression");
   }
-  debugger;
-  const left = processNode(node.getLeft()) as ExpressionElement;
+
+  const leftNode = node.getLeft();
+  const rightNode = node.getRight();
+  const left = processNode(leftNode) as ExpressionElement;
+  const right = processNode(rightNode) as ExpressionElement;
   const operator = node.getOperatorToken().getText();
-  const right = processNode(node.getRight()) as ExpressionElement;
+
+  // Check if it's a string concatenation
+  if (operator === "+" && (isStringType(leftNode) || isStringType(rightNode))) {
+    return {
+      element: "procedureCall",
+      name: "CONCAT",
+      args: [left, right],
+    };
+  }
 
   if (["+=", "-=", "*=", "/=", "%="].includes(operator)) {
     console.log("Long operator", operator);
