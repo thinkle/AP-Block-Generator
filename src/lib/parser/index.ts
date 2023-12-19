@@ -6,7 +6,7 @@ import type {
   WhileLoopExpression,
   ReturnStatement,
   AnyElement,
-} from "./pseudocode";
+} from "../pseudocode";
 import { handleFunctionDeclaration } from "./handleFunctionDeclaration";
 import { handleVariableDeclaration } from "./handleVariableDeclaration";
 import { handleStringLiteral } from "./handleStringLiteral";
