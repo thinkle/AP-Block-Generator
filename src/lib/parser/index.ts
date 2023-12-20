@@ -3,7 +3,6 @@ import type {
   CodeElement,
   Assignment,
   EmptyNode,
-  WhileLoopExpression,
   ReturnStatement,
   AnyElement,
 } from "../pseudocode";
@@ -30,7 +29,7 @@ import { handleIfStatement } from "./handleIfStatement";
 import { transformTreeWithBreakout } from "./breakout";
 import { resetNames } from "./getUniqueName";
 import { handleAnonymousArrowFunction } from "./handleArrowFunction";
-
+import { handleWhileLoop } from "./handleWhileLoop";
 type NodeHandler = (node: TS.Node) => AnyElement;
 export const ASSIGN = "←";
 export function parseCode(code: string): AnyElement {
@@ -61,17 +60,6 @@ export function parseCode(code: string): AnyElement {
   }
 }
 
-/******************************************************************************
- *   Map all of our handlers!                                                 *
- *
- *
- *   This is the map you'll need to modify to add new parsing features!
- *
- *
- ********************/
-
-// Handlers for different node types
-
 const nodeHandlers: Record<TS.SyntaxKind, NodeHandler> = {
   [TS.SyntaxKind.FunctionDeclaration]: handleFunctionDeclaration,
   [TS.SyntaxKind.ArrowFunction]: handleAnonymousArrowFunction,
@@ -86,6 +74,7 @@ const nodeHandlers: Record<TS.SyntaxKind, NodeHandler> = {
   [TS.SyntaxKind.ArrayLiteralExpression]: handleArrayLiteralExpression,
   [TS.SyntaxKind.ForStatement]: handleForLoop,
   [TS.SyntaxKind.ForOfStatement]: handleForOfLoop,
+  [TS.SyntaxKind.WhileStatement]: handleWhileLoop,
   [TS.SyntaxKind.Block]: handleBlock,
   [TS.SyntaxKind.ElementAccessExpression]: handleListIndex,
   [TS.SyntaxKind.PropertyAccessExpression]: handlePropertyAccessExpression,
