@@ -7,7 +7,10 @@ import type {
   ReturnStatement,
   AnyElement,
 } from "../pseudocode";
-import { handleFunctionDeclaration } from "./handleFunctionDeclaration";
+import {
+  handleFunctionDeclaration,
+  handleFunctionExpression,
+} from "./handleFunctionDeclaration";
 import { handleVariableDeclaration } from "./handleVariableDeclaration";
 import { handleStringLiteral } from "./handleStringLiteral";
 import { handleNumericLiteral } from "./handleNumericLiteral";
@@ -25,10 +28,13 @@ import { handleParenthesizedExpression } from "./handleParenthesizedExpression";
 import { handleArrayLiteralExpression } from "./handleArrayLiteralExpression";
 import { handleIfStatement } from "./handleIfStatement";
 import { transformTreeWithBreakout } from "./breakout";
+import { resetNames } from "./getUniqueName";
+import { handleAnonymousArrowFunction } from "./handleArrowFunction";
 
 type NodeHandler = (node: TS.Node) => AnyElement;
 export const ASSIGN = "←";
 export function parseCode(code: string): AnyElement {
+  resetNames();
   const project = new TS.Project({ useInMemoryFileSystem: true });
   const sourceFile = project.createSourceFile("temp.ts", code);
   try {
@@ -41,6 +47,8 @@ export function parseCode(code: string): AnyElement {
       };
     }
     console.log("ogResult", JSON.parse(JSON.stringify(ogResult)));
+    transformTreeWithBreakout(ogResult);
+    transformTreeWithBreakout(ogResult);
     transformTreeWithBreakout(ogResult);
     console.log("transformed => ", ogResult);
     return ogResult;
@@ -66,6 +74,8 @@ export function parseCode(code: string): AnyElement {
 
 const nodeHandlers: Record<TS.SyntaxKind, NodeHandler> = {
   [TS.SyntaxKind.FunctionDeclaration]: handleFunctionDeclaration,
+  [TS.SyntaxKind.ArrowFunction]: handleAnonymousArrowFunction,
+  [TS.SyntaxKind.FunctionExpression]: handleFunctionExpression,
   [TS.SyntaxKind.VariableDeclaration]: handleVariableDeclaration,
   [TS.SyntaxKind.Identifier]: handleIdentifier,
   [TS.SyntaxKind.StringLiteral]: handleStringLiteral,
@@ -97,12 +107,12 @@ const nodeHandlers: Record<TS.SyntaxKind, NodeHandler> = {
     const expression = returnStatement.getExpression();
     if (expression) {
       return {
-        element: "return",
+        element: "returnStatement",
         value: processNode(expression),
       };
     } else {
       return {
-        element: "return",
+        element: "returnStatement",
         value: {
           element: "empty",
         },

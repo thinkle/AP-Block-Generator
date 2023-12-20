@@ -10,7 +10,18 @@ import { ASSIGN, processNode } from ".";
 import { handleArrowFunction } from "./handleArrowFunction";
 import { handleFunctionDeclaration } from "./handleFunctionDeclaration";
 import type MathExpression from "../../components/APCSP/MathExpression.svelte";
-import { push, splice, forEach, map, filter, reduce } from "./listMethods";
+import {
+  push,
+  splice,
+  forEach,
+  map,
+  filter,
+  reduce,
+  find,
+  includes,
+  every,
+  some,
+} from "./listMethods";
 
 const treatAsOutput = (args: ExpressionElement[]) => ({
   name: "OUTPUT",
@@ -31,6 +42,10 @@ export const methodHandlers = {
   map,
   filter,
   reduce,
+  find,
+  some,
+  includes,
+  every,
   /* Window methods and console methods... */
   log: (
     objectNode: TS.LeftHandSideExpression,
