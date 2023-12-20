@@ -19,7 +19,6 @@
   import Block from "./Block.svelte";
   import ListIndexValue from "./ListIndexValue.svelte";
   export let node: P.AnyElement | P.AnyElement[];
-  console.log("Got node", node);
 </script>
 
 {#if Array.isArray(node)}
