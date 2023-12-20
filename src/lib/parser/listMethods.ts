@@ -342,12 +342,7 @@ export const find = (
           element: "forEach", // for each item in list...
           list: processNode(objectNode),
           itemVariable: itemVariableName,
-          body: {
-            element: "block",
-            children: [
-              body, // BLOCK of previous function (will now set isItem)
-            ],
-          }, // end forEach body
+          body, // BLOCK of previous function (will now set isItem)
         }, // end forEach
       ],
     }, // end function body
