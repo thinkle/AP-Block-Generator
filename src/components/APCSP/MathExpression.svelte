@@ -5,13 +5,19 @@
 </script>
 
 <span class="expression">
-  <span class="left">
-    <PseudoCode node={node.left} />
-  </span>
-  <span class="operator">{node.operator}</span>
-  <span class="right">
-    <PseudoCode node={node.right} />
-  </span>
+  {#if node && node.left}
+    <span class="left">
+      <PseudoCode node={node.left} />
+    </span>
+  {/if}
+  {#if node?.operator}
+    <span class="operator">{node.operator}</span>
+  {/if}
+  {#if node?.right}
+    <span class="right">
+      <PseudoCode node={node.right} />
+    </span>
+  {/if}
 </span>
 
 <style>
