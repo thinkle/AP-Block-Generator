@@ -3,10 +3,12 @@ import type {
   ProcedureCall,
   ExpressionElement,
   Value,
+  IfStatement,
   ForEachExpression,
   Block,
   MathExpression,
   ReturnStatement,
+  ParenthesizedExpression,
   StatementElement,
   AnyElement,
   List,
@@ -14,6 +16,8 @@ import type {
 import { ASSIGN, processNode } from ".";
 import { handleArrowFunction } from "./handleArrowFunction";
 import { handleFunctionDeclaration } from "./handleFunctionDeclaration";
+import { get } from "svelte/store";
+import { getUniqueName } from "./getUniqueName";
 
 export const push = (
   objectNode: TS.LeftHandSideExpression,
@@ -86,20 +90,14 @@ export const map = (
 ) => {
   let mapArg = fullNode.getArguments()[0];
 
-  // Find what's on the "lefthand side" of the map call
-  // (e.g. "let doubled = [1,2,3].map(double);")
-  // I'll need this to transform subsequent calls to e.g.
-  // APPEND(doubled, double(item))
-  let {
-    leftHandSideVariable,
-    addAssignment,
-  }: { leftHandSideVariable: string; addAssignment: boolean } =
-    getLeftSideVariable(fullNode);
-
   // Get body and item variable name from the callback function
   // (e.g. "(item) => item * item") gives me
   // item and the block with return item * item;
   let [body, itemVariableName] = getBodyAndVarFromFunction(mapArg);
+  let leftHandSideVariable = getUniqueName(
+    itemVariableName + "sMapping",
+    fullNode
+  );
 
   /* Change all return statements from function into APPEND statements */
   crawlAndTransformReturnStatements(
@@ -117,39 +115,32 @@ export const map = (
     }
   );
 
-  // We are going to transform ourselves into an empty list
-  // so that what was
-  // let foo = [1,2,3].map(double);
-  // becomes
-  // let foo = [];
-  // (and then we'll add the loop...)
-  let firstItem: List | MathExpression = {
-    element: "value",
-    type: "list",
-    value: [],
+  // initialize empty list...
+  let firstItem = {
+    element: "mathExpression",
+    left: {
+      element: "variable",
+      name: leftHandSideVariable,
+    },
+    operator: ASSIGN,
+    right: {
+      element: "value",
+      type: "list",
+      value: [],
+    },
   };
-  if (addAssignment) {
-    firstItem = {
-      element: "mathExpression",
-      left: {
-        element: "variable",
-        name: leftHandSideVariable,
-      },
-      operator: ASSIGN,
-      right: {
-        element: "value",
-        type: "list",
-        value: [],
-      },
-    };
-  }
 
   return [
-    firstItem,
+    {
+      element: "variable",
+      name: leftHandSideVariable,
+    },
     {
       element: "breakOut",
+      direction: "before",
       levelUp: 1,
     },
+    firstItem,
     {
       element: "forEach",
       list: processNode(objectNode),
@@ -166,20 +157,18 @@ export const filter = (
 ) => {
   let filterArg = fullNode.getArguments()[0];
 
-  // Same as for 'map', we need to know where the result of 'filter' is being stored
-  let {
-    leftHandSideVariable,
-    addAssignment,
-  }: { leftHandSideVariable: string; addAssignment: boolean } =
-    getLeftSideVariable(fullNode);
-
   // Get body and item variable name from the filter function
   let [body, itemVariableName] = getBodyAndVarFromFunction(filterArg);
+
+  let leftHandSideVariable = getUniqueName(
+    "filtered" + itemVariableName[0].toUpperCase() + itemVariableName.slice(1),
+    fullNode
+  );
 
   /* Change all return statements from function into conditional APPEND statements */
   crawlAndTransformReturnStatements(
     body,
-    (node: ReturnStatement | ProcedureCall) => {
+    (node: ReturnStatement | IfStatement) => {
       node.element = "ifStatement"; // Using an if statement to conditionally append
       node.condition = node.value; // The condition is the return value of the filter callback
       node.consequent = {
@@ -206,34 +195,32 @@ export const filter = (
   );
 
   // Set up the initial empty list for the 'filter' result
-  let firstItem: List | MathExpression = {
-    element: "value",
-    type: "list",
-    value: [],
+  let initializer = {
+    element: "mathExpression",
+    left: {
+      element: "variable",
+      name: leftHandSideVariable,
+    },
+    operator: ASSIGN,
+    right: {
+      element: "value",
+      type: "list",
+      value: [],
+    },
   };
-  if (addAssignment) {
-    firstItem = {
-      element: "mathExpression",
-      left: {
-        element: "variable",
-        name: leftHandSideVariable,
-      },
-      operator: ASSIGN,
-      right: {
-        element: "value",
-        type: "list",
-        value: [],
-      },
-    };
-  }
 
   // Create the forEach loop structure to iterate and conditionally append items
   return [
-    firstItem,
+    {
+      element: "variable",
+      name: leftHandSideVariable,
+    },
     {
       element: "breakOut",
+      direction: "before",
       levelUp: 1,
     },
+    initializer,
     {
       element: "forEach",
       list: processNode(objectNode),
@@ -250,9 +237,6 @@ export const reduce = (
 ) => {
   let reduceCallback = fullNode.getArguments()[0];
   let initialValue = fullNode.getArguments()[1]; // The second argument is the initial value for the accumulator
-
-  // Get left-hand side variable name from the parent node or create a unique name
-  let { leftHandSideVariable, addAssignment } = getLeftSideVariable(fullNode);
 
   // Get the body of the reduce function and the names of the accumulator and current item
   let [body, accumulatorVariableName, itemVariableName] =
@@ -275,9 +259,13 @@ export const reduce = (
   // If the result of the reduce function is being assigned, ensure we capture that
   return [
     // First off, set our initial value...
-    processNode(initialValue),
+    {
+      element: "variable",
+      name: accumulatorVariableName,
+    },
     {
       element: "breakOut",
+      direction: "before",
       levelUp: 1,
     }, // Then we "break out for the rest..."
     // Assign initial value to accumulator...
@@ -293,17 +281,327 @@ export const reduce = (
       itemVariable: itemVariableName,
       body,
     },
-    // Finally, we set our left hand side to the accumulator...
+  ];
+};
+
+/* Now we handle methods like find/includes/etc */
+export const find = (
+  objectNode: TS.LeftHandSideExpression,
+  args: ExpressionElement[],
+  fullNode: TS.CallExpression
+) => {
+  // grabbing the callable thing from i.e. lst.find(f)
+  let [body, itemVariableName] = getBodyAndVarFromFunction(
+    fullNode.getArguments()[0]
+  );
+  // We don't really need the left variable, but we'll use it to generate
+  // a function name...
+  let leftHandSideVariable = getLeftSideVariable(fullNode).leftHandSideVariable;
+  let functionName =
+    "find" +
+    leftHandSideVariable[0].toUpperCase() +
+    leftHandSideVariable.slice(1);
+  // Check if functionName already exists in project? If so, append a number
+  functionName = getUniqueName(functionName, fullNode);
+  // Change all return statements from function into conditional return statements
+  crawlAndTransformReturnStatements(
+    body,
+    (node: ReturnStatement | IfStatement) => {
+      node.element = "ifStatement";
+      node.condition = node.value;
+      node.consequent = {
+        element: "returnStatement",
+        value: {
+          element: "variable",
+          name: itemVariableName,
+        },
+      };
+    }
+  );
+  // We're constructing a function like this...
+  // for each item in list
+  //     isItem = false;
+  //     BLOCK of previous function, but return statements are replaced with
+  //     isItem = RETURNVALUE -- we have a slight problem is the previous function
+  //     relied on a falsy return value, but we can probably live with that risk...
+  //     if (isItem) return item
+
+  let functionDeclaration = {
+    element: "procedureDefinition", // function findX () {...
+    name: functionName,
+    parameters: [],
+    body: {
+      element: "block",
+      children: [
+        {
+          element: "forEach", // for each item in list...
+          list: processNode(objectNode),
+          itemVariable: itemVariableName,
+          body: {
+            element: "block",
+            children: [
+              body, // BLOCK of previous function (will now set isItem)
+            ],
+          }, // end forEach body
+        }, // end forEach
+      ],
+    }, // end function body
+  }; // end function declaration
+
+  return [
+    { element: "procedureCall", name: functionName, args: [] },
+    {
+      element: "breakOut",
+      direction: "before",
+    },
+    functionDeclaration,
+  ];
+};
+
+export const includes = (
+  objectNode: TS.LeftHandSideExpression,
+  args: ExpressionElement[],
+  fullNode: TS.CallExpression
+) => {
+  // grabbing the callable thing from i.e. lst.find(f)
+
+  let includedItem = fullNode.getArguments()[0]?.getText() || "item";
+  includedItem = includedItem.replace(/\W/g, "");
+  let varName = getUniqueName(
+    "includes" + includedItem[0].toUpperCase() + includedItem.slice(1),
+    fullNode
+  );
+
+  return [
+    { element: "variable", name: varName },
+    {
+      element: "breakOut",
+      direction: "before",
+    },
+    // Initialize variable
     {
       element: "mathExpression",
       operator: ASSIGN,
-      left: { element: "variable", name: leftHandSideVariable },
-      right: { element: "variable", name: accumulatorVariableName },
+      left: { element: "variable", name: varName },
+      right: {
+        element: "value",
+        value: "false",
+        type: "boolean",
+      },
+    },
+    {
+      element: "forEach",
+      list: processNode(objectNode),
+      itemVariable: "item",
+      body: {
+        element: "block",
+        children: [
+          {
+            element: "ifStatement",
+            condition: {
+              element: "mathExpression",
+              left: {
+                element: "variable",
+                name: "item",
+              },
+              operator: "=",
+              right: args[0],
+            },
+            consequent: {
+              element: "block",
+              children: [
+                {
+                  element: "mathExpression",
+                  operator: ASSIGN,
+                  left: {
+                    element: "variable",
+                    name: varName,
+                  },
+                  right: {
+                    element: "value",
+                    value: "true",
+                    type: "boolean",
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
     },
   ];
 };
 
-function getBodyAndVarFromFunction(node: TS.Node) {
+export const some = (
+  objectNode: TS.LeftHandSideExpression,
+  args: ExpressionElement[],
+  fullNode: TS.CallExpression
+) => {
+  // grabbing the callable thing from i.e. lst.find(f)
+  let [body, itemVariableName] = getBodyAndVarFromFunction(
+    fullNode.getArguments()[0]
+  );
+  // We don't really need the left variable, but we'll use it to generate
+  // a function name...
+  let leftHandSideVariable = getLeftSideVariable(fullNode).leftHandSideVariable;
+  let functionName =
+    "find" +
+    leftHandSideVariable[0].toUpperCase() +
+    leftHandSideVariable.slice(1);
+  // Check if functionName already exists in project? If so, append a number
+  functionName = getUniqueName(functionName, fullNode);
+  // Change all return statements from function into conditional return statements
+  crawlAndTransformReturnStatements(
+    body,
+    (node: ReturnStatement | IfStatement) => {
+      node.element = "ifStatement";
+      node.condition = node.value;
+      node.consequent = {
+        element: "returnStatement",
+        value: {
+          element: "value",
+          value: "true",
+          type: "boolean",
+        },
+      };
+    }
+  );
+  // We're constructing a function like this...
+  // for each item in list
+  //     isItem = false;
+  //     BLOCK of previous function, but return statements are replaced with
+  //     isItem = RETURNVALUE -- we have a slight problem is the previous function
+  //     relied on a falsy return value, but we can probably live with that risk...
+  //     if (isItem) return item
+
+  let functionDeclaration = {
+    element: "procedureDefinition", // function findX () {...
+    name: functionName,
+    parameters: [],
+    body: {
+      element: "block",
+      children: [
+        {
+          element: "forEach", // for each item in list...
+          list: processNode(objectNode),
+          itemVariable: itemVariableName,
+          body: {
+            element: "block",
+            children: [
+              body, // BLOCK of previous function (will now set isItem)
+            ],
+          }, // end forEach body
+        }, // end forEach
+      ],
+    }, // end function body
+  }; // end function declaration
+
+  return [
+    { element: "procedureCall", name: functionName, args: [] },
+    {
+      element: "breakOut",
+      direction: "before",
+    },
+    functionDeclaration,
+  ];
+};
+
+export const every = (
+  objectNode: TS.LeftHandSideExpression,
+  args: ExpressionElement[],
+  fullNode: TS.CallExpression
+) => {
+  // grabbing the callable thing from i.e. lst.find(f)
+  let [body, itemVariableName] = getBodyAndVarFromFunction(
+    fullNode.getArguments()[0]
+  );
+  // We don't really need the left variable, but we'll use it to generate
+  // a function name...
+  let leftHandSideVariable = getLeftSideVariable(fullNode).leftHandSideVariable;
+  let functionName =
+    "find" +
+    leftHandSideVariable[0].toUpperCase() +
+    leftHandSideVariable.slice(1);
+  // Check if functionName already exists in project? If so, append a number
+  functionName = getUniqueName(functionName, fullNode);
+  // Change all return statements from function into conditional return statements
+  crawlAndTransformReturnStatements(
+    body,
+    (node: ReturnStatement | IfStatement) => {
+      node.element = "ifStatement";
+      node.condition = {
+        element: "mathExpression",
+        left: { element: "empty" },
+        operator: "NOT",
+        right: {
+          element: "parentheses",
+          expression: node.value,
+        },
+      };
+      node.consequent = {
+        element: "block",
+        children: [
+          {
+            element: "returnStatement",
+            value: {
+              element: "value",
+              value: "false",
+              type: "boolean",
+            },
+          },
+        ],
+      };
+    }
+  );
+  // We're constructing a function like this...
+  // for each item in list
+  //     isItem = false;
+  //     BLOCK of previous function, but return statements are replaced with
+  //     isItem = RETURNVALUE -- we have a slight problem is the previous function
+  //     relied on a falsy return value, but we can probably live with that risk...
+  //     if (isItem) return item
+
+  let functionDeclaration = {
+    element: "procedureDefinition", // function findX () {...
+    name: functionName,
+    parameters: [],
+    body: {
+      element: "block",
+      children: [
+        {
+          element: "forEach", // for each item in list...
+          list: processNode(objectNode),
+          itemVariable: itemVariableName,
+          body: {
+            element: "block",
+            children: [
+              body, // BLOCK of previous function (will now set isItem)
+            ],
+          }, // end forEach body
+        }, // end forEach
+        {
+          element: "returnStatement",
+          value: {
+            element: "value",
+            value: "true",
+            type: "boolean",
+          },
+        },
+      ],
+    }, // end function body
+  }; // end function declaration
+
+  return [
+    { element: "procedureCall", name: functionName, args: [] },
+    {
+      element: "breakOut",
+      direction: "before",
+    },
+    functionDeclaration,
+  ];
+};
+
+function getBodyAndVarFromFunction(node: TS.Node): [Block, string, string] {
   let body: Block;
   let itemVariableName: string = "item";
   let secondVariableName: string = "";
