@@ -8,7 +8,7 @@ export type StatementElement =
   | ProcedureCall
   | IfStatement
   | ReturnStatement
-  | WhileLoopExpression
+  | UntilLoopExpression
   | ForEachExpression
   | RepeatExpression
   | ParenthesizedExpression
@@ -83,8 +83,8 @@ export interface IfStatement extends CodeElement {
   alternate?: Block;
 }
 
-export interface WhileLoopExpression extends CodeElement {
-  element: "whileLoop";
+export interface UntilLoopExpression extends CodeElement {
+  element: "untilLoop";
   condition: ExpressionElement;
   body: Block;
 }
