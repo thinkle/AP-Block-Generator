@@ -18,6 +18,7 @@
   import * as P from "../../lib/pseudocode";
   import Block from "./Block.svelte";
   import ListIndexValue from "./ListIndexValue.svelte";
+  import UntilLoop from "./UntilLoop.svelte";
   export let node: P.AnyElement | P.AnyElement[];
 </script>
 
@@ -65,6 +66,8 @@
       (<svelte:self node={node.expression} />)
     {:else if node.element == "repeatN"}
       <RepeatN {node} />
+    {:else if node.element == "untilLoop"}
+      <UntilLoop {node} />
     {:else if node.element == "forEach"}
       <ForEach {node} />
     {:else if node.element == "code" || !node.element}
