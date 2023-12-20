@@ -57,10 +57,7 @@
         return "";
       }
       if (node.element === "returnStatement") {
-        return `${indent(i)}RETURN ${processParsedIntoText(
-          node.value,
-          indentLevel
-        )}`;
+        return `RETURN ${processParsedIntoText(node.value, indentLevel)}`;
       }
       if (node.element === "parentheses") {
         return `(${processParsedIntoText(node.expression, indentLevel)})`;
@@ -98,6 +95,14 @@
         let text = `\n${indent(i)}FOR EACH ${
           node.itemVariable
         } IN ${processParsedIntoText(node.list, indentLevel)}`;
+        text += processParsedIntoText(node.body, indentLevel);
+        return text;
+      }
+      if (node.element === "untilLoop") {
+        let text = `\n${indent(i)}REPEAT UNTIL ${processParsedIntoText(
+          node.condition,
+          indentLevel
+        )}`;
         text += processParsedIntoText(node.body, indentLevel);
         return text;
       }
