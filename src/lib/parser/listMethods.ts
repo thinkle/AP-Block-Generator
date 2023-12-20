@@ -310,11 +310,16 @@ export const find = (
       node.element = "ifStatement";
       node.condition = node.value;
       node.consequent = {
-        element: "returnStatement",
-        value: {
-          element: "variable",
-          name: itemVariableName,
-        },
+        element: "block",
+        children: [
+          {
+            element: "returnStatement",
+            value: {
+              element: "variable",
+              name: itemVariableName,
+            },
+          },
+        ],
       };
     }
   );
