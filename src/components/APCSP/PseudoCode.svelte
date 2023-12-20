@@ -60,6 +60,8 @@
       <ProcedureCall {node} />
     {:else if node.element == "ifStatement"}
       <IfStatement {node}></IfStatement>
+    {:else if node.element == "comment"}
+      <pre class="comment">{node.comment}</pre>
     {:else if node.element == "mathExpression"}
       <MathExpression {node}></MathExpression>
     {:else if node.element == "parentheses"}
@@ -102,5 +104,8 @@
   }
   section {
     line-height: 2;
+  }
+  .comment {
+    color: #ef640e;
   }
 </style>

@@ -56,6 +56,9 @@
       if (node.element === "empty") {
         return "";
       }
+      if (node.element === "comment") {
+        return `${node.comment}`;
+      }
       if (node.element === "returnStatement") {
         return `RETURN ${processParsedIntoText(node.value, indentLevel)}`;
       }

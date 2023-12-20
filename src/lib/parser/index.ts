@@ -30,6 +30,7 @@ import { transformTreeWithBreakout } from "./breakout";
 import { resetNames } from "./getUniqueName";
 import { handleAnonymousArrowFunction } from "./handleArrowFunction";
 import { handleWhileLoop } from "./handleWhileLoop";
+import { handleComment } from "./handleComments";
 type NodeHandler = (node: TS.Node) => AnyElement;
 export const ASSIGN = "←";
 export function parseCode(code: string): AnyElement {
@@ -81,6 +82,10 @@ const nodeHandlers: Record<TS.SyntaxKind, NodeHandler> = {
   [TS.SyntaxKind.PrefixUnaryExpression]: handlePrefixUnaryExpression,
   [TS.SyntaxKind.PostfixUnaryExpression]: handlePostfixUnaryExpression,
   [TS.SyntaxKind.ParenthesizedExpression]: handleParenthesizedExpression,
+  // Comments
+  [TS.SyntaxKind.SingleLineCommentTrivia]: handleComment,
+  [TS.SyntaxKind.MultiLineCommentTrivia]: handleComment,
+  // Some quickies...
   [TS.SyntaxKind.TrueKeyword]: () => ({
     element: "value",
     type: "boolean",

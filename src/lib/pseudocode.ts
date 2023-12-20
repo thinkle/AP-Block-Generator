@@ -12,10 +12,11 @@ export type StatementElement =
   | ForEachExpression
   | RepeatExpression
   | ParenthesizedExpression
-  | GenericForExpression
+  | Comment
   | ProcedureDefinition; // Add other statement types as needed
 export type ExpressionElement =
   | Value
+  | Comment
   | Variable
   | MathExpression
   | ParenthesizedExpression
@@ -136,4 +137,8 @@ export interface Block extends CodeElement {
 export interface ParenthesizedExpression extends CodeElement {
   element: "parentheses";
   expression: ExpressionElement;
+}
+export interface Comment extends CodeElement {
+  element: "comment";
+  comment: string;
 }
