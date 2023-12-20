@@ -1,4 +1,7 @@
 <script lang="ts">
+  import "contain-css-svelte/themes/typography-airy.css";
+  import "contain-css-svelte/vars/defaults.css";
+  import "contain-css-svelte/themes/light.css";
   import PseudoText from "./PseudoText.svelte";
 
   import ThreeColumn from "./components/ThreeColumn.svelte";
@@ -9,42 +12,57 @@
   import PseudoCode from "./components/APCSP/PseudoCode.svelte";
   import type { AnyElement } from "./lib/pseudocode";
   import CodeResult from "./components/CodeResult.svelte";
-
+  import {
+    Page,
+    SplitPane,
+    TabBar,
+    TabItem,
+    Bar,
+    Button,
+  } from "contain-css-svelte";
   let parsed: AnyElement | AnyElement[] = [];
   $: parsed = parseCode($code);
   $: console.log("parsed: ", parsed);
   let showResult = false;
+  let showBlocks = true;
 </script>
 
 <h1>TypeScript => APCSP PseudoCode Generator</h1>
 
-<main>
-  <ThreeColumn>
+<Page>
+  <SplitPane>
     <div slot="left">
-      <div class="bar">
+      <Bar class="bar">
         <h2>JavaScript</h2>
         {#if showResult}
-          <button on:click={() => (showResult = false)}>Reset</button>
+          <Button on:click={() => (showResult = false)}>Reset</Button>
         {:else}
-          <button on:click={() => (showResult = true)}>Run</button>
+          <Button on:click={() => (showResult = true)}>Run</Button>
         {/if}
-      </div>
+      </Bar>
       <CodeMirror bind:value={$code} lang={javascript()} />
     </div>
-    <div slot="center">
-      <div class="bar"><h2>APCSP Blocks</h2></div>
-      <PseudoCode node={parsed} />
-    </div>
     <div slot="right">
-      <div class="bar"><h2>APCSP PseudoCode</h2></div>
-      <PseudoText node={parsed}></PseudoText>
+      <TabBar>
+        <TabItem on:click={() => (showBlocks = true)} active={showBlocks}>
+          APCSP Blocks
+        </TabItem>
+        <TabItem on:click={() => (showBlocks = false)} active={!showBlocks}>
+          APCSP PseudoCode
+        </TabItem>
+      </TabBar>
+      {#if showBlocks}
+        <PseudoCode node={parsed} />
+      {:else}
+        <PseudoText node={parsed}></PseudoText>
+      {/if}
     </div>
-  </ThreeColumn>
-</main>
+  </SplitPane>
+</Page>
 <section>
   {#if showResult}
     <section class="result">
-      <button on:click={() => (showResult = false)}>Hide</button>
+      <Button on:click={() => (showResult = false)}>Hide</Button>
       <CodeResult
         height={200}
         js={$code}

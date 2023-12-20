@@ -25,6 +25,7 @@
     "@codemirror/lang-javascript": "^6.2.1",
     "@codemirror/lang-sass": "^6.0.2",
     "codemirror": "^6.0.1",
+    "contain-css-svelte": "^0.0.3",
     "esbuild": "^0.19.9",
     "highlightjs": "^9.16.2",
     "markdown-it": "^13.0.2",
