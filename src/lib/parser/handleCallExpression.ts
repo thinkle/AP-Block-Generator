@@ -23,8 +23,8 @@ import {
   some,
 } from "./listMethods";
 
-const treatAsOutput = (args: ExpressionElement[]) => ({
-  name: "OUTPUT",
+const treatAsDISPLAY = (args: ExpressionElement[]) => ({
+  name: "DISPLAY",
   args,
   element: "procedureCall",
 });
@@ -51,12 +51,12 @@ export const methodHandlers = {
     objectNode: TS.LeftHandSideExpression,
     args: ExpressionElement[],
     fullNode: TS.Node
-  ) => treatAsOutput(args),
+  ) => treatAsDISPLAY(args),
   alert: (
     objectNode: TS.LeftHandSideExpression,
     args: ExpressionElement[],
     fullNode: TS.Node
-  ) => treatAsOutput(args),
+  ) => treatAsDISPLAY(args),
   prompt: (
     objectNode: TS.LeftHandSideExpression,
     args: ExpressionElement[],

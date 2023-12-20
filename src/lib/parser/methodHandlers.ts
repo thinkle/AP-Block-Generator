@@ -11,7 +11,7 @@ import { handleArrowFunction } from "./handleArrowFunction";
 import MathExpression from "../../components/APCSP/MathExpression.svelte";
 import {
   generateUniqueVariableName,
-  treatAsOutput,
+  treatAsDISPLAY,
   treatAsInput,
 } from "./handleCallExpression";
 
@@ -263,12 +263,12 @@ export const methodHandlers = {
     objectNode: TS.LeftHandSideExpression,
     args: ExpressionElement[],
     fullNode: TS.Node
-  ) => treatAsOutput(args),
+  ) => treatAsDISPLAY(args),
   alert: (
     objectNode: TS.LeftHandSideExpression,
     args: ExpressionElement[],
     fullNode: TS.Node
-  ) => treatAsOutput(args),
+  ) => treatAsDISPLAY(args),
   prompt: (
     objectNode: TS.LeftHandSideExpression,
     args: ExpressionElement[],

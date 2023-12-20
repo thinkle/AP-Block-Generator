@@ -636,7 +636,7 @@ function getBodyAndVarFromFunction(node: TS.Node): [Block, string, string] {
   } else if (TS.Node.isPropertyAccessExpression(node)) {
     let functionName = node.getText();
     if (["console.log", "window.alert"].includes(functionName)) {
-      functionName = "OUTPUT";
+      functionName = "DISPLAY";
     } else if (["window.prompt"].includes(functionName)) {
       functionName = "INPUT";
     }

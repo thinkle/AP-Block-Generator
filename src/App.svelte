@@ -74,13 +74,13 @@
     <p>
       If you want to try <em>running</em> the code, I recommend using
       <b>window.prompt</b>
-      (for input) and <b>window.alert</b> (for output) so you can see the results
+      (for input) and <b>window.alert</b> (for DISPLAY) so you can see the results
       when you click the "run" button (you have to reset to run again, so that we
       destroy and re-create an iFrame to give you a fresh JavaScript context to run
       your code in).
     </p>
     <p>
-      You can also use console.log for output but you'll have to pop open an
+      You can also use console.log for DISPLAY but you'll have to pop open an
       inspector to see your log statements and I'll warn you I probably spammed
       the inspector with my own debug messages.
     </p>
