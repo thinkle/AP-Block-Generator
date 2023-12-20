@@ -22,6 +22,7 @@ import {
   every,
   some,
 } from "./listMethods";
+import { substring, toLowerCase, toUpperCase } from "./stringMethods";
 
 const treatAsDISPLAY = (args: ExpressionElement[]) => ({
   name: "DISPLAY",
@@ -46,6 +47,11 @@ export const methodHandlers = {
   some,
   includes,
   every,
+  /* String methods */
+  substring,
+  substr: substring,
+  toLowerCase,
+  toUpperCase,
   /* Window methods and console methods... */
   log: (
     objectNode: TS.LeftHandSideExpression,
