@@ -2,6 +2,17 @@ import * as TS from "ts-morph";
 import type { ProcedureDefinition, StatementElement } from "./pseudocode";
 import type { Expression } from "@ts-morph/common/lib/typescript";
 import { processNode } from ".";
+import { getUniqueName } from "./getUniqueName";
+
+export function handleAnonymousArrowFunction(initializer: TS.ArrowFunction) {
+  let name = getUniqueName("anonymousFunction", initializer);
+  let definition = handleArrowFunction(name, initializer);
+  return [
+    { element: "variable", name },
+    { element: "breakOut", direction: "before" },
+    definition,
+  ];
+}
 
 export function handleArrowFunction(
   name: string,
