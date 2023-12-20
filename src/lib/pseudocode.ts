@@ -102,15 +102,6 @@ export interface RepeatExpression extends CodeElement {
   body: Block;
 }
 
-/* Not supported in APCSP pseudocode but likely to be typed... */
-export interface GenericForExpression extends CodeElement {
-  element: "genericFor";
-  initializer: string;
-  condition: string;
-  incrementor: string;
-  body: StatementElement[];
-}
-
 export interface ListIndex extends CodeElement {
   element: "listIndex";
   list: Variable | List;
