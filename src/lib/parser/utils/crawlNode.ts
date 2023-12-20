@@ -30,5 +30,11 @@ export const crawl = (node: AnyElement, f: (node: AnyElement) => void) => {
     if (node.args) {
       node.args.map((n) => crawl(n, f));
     }
+    if (node.left) {
+      crawl(node.left, f);
+    }
+    if (node.right) {
+      crawl(node.right, f);
+    }
   }
 };
