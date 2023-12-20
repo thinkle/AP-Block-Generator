@@ -19,6 +19,8 @@
     TabItem,
     Bar,
     Button,
+    Container,
+    Code,
   } from "contain-css-svelte";
   let parsed: AnyElement | AnyElement[] = [];
   $: parsed = parseCode($code);
@@ -58,6 +60,51 @@
       {/if}
     </div>
   </SplitPane>
+  <Container>
+    <h2>How to Use</h2>
+    <p>
+      Just type JavaScript in the JavaScript side, and you should see code
+      appear on the right. If I implemented the syntax you're using (which
+      should be most syntax), it should show up translated into APCSP code.
+    </p>
+    <p>
+      Some structures, such as objects, aren't supported in the APCSP syntax, so
+      YMMV.
+    </p>
+    <p>
+      If you want to try <em>running</em> the code, I recommend using
+      <b>window.prompt</b>
+      (for input) and <b>window.alert</b> (for output) so you can see the results
+      when you click the "run" button (you have to reset to run again, so that we
+      destroy and re-create an iFrame to give you a fresh JavaScript context to run
+      your code in).
+    </p>
+    <p>
+      You can also use console.log for output but you'll have to pop open an
+      inspector to see your log statements and I'll warn you I probably spammed
+      the inspector with my own debug messages.
+    </p>
+    <p>
+      If you want to be impressed with my overachieving in creating this tools,
+      take some of the list methods for a spin.
+    </p>
+    <p>For example, the following code fragments should work.</p>
+    <Code
+      code={`
+let fruits = ['apple','pear','persimmon','banana'];
+let pfruits = fruits.filter(fruit => fruit[0]=='p');
+`}
+    />
+    <p>List methods I've implemented include:</p>
+    <ul>
+      <li>forEach</li>
+      <li>map</li>
+      <li>filter</li>
+      <li>some</li>
+      <li>includes</li>
+      <li>find</li>
+    </ul>
+  </Container>
 </Page>
 <section>
   {#if showResult}
