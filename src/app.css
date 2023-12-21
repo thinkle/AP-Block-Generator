@@ -1,20 +1,25 @@
+.line,
+.round-block,
+.comment {
+  margin-bottom: 0.25em;
+}
+
 .line {
   display: flex;
-  gap: 8px;
+  gap: 0.25em;
   align-items: center;
-  margin-bottom: 8px;
 }
 .round-block {
-  border-radius: 16px;
-  padding: 8px;
+  border-radius: 1em;
+  padding: 0.5em;
   border: 2px solid #333;
 }
 
 .rounded-inline {
   display: inline-flex;
   align-items: center;
-  border-radius: 8px;
-  padding: 8px;
+  border-radius: 0.5em;
+  padding: 0.25em;
   border: 1px solid #333;
 }
 
@@ -23,9 +28,9 @@
 }
 
 .square-block {
-  margin: 3px;
+  margin: 0.25em;
   border-radius: 0;
-  padding: 8px;
+  padding: 0.25em;
   display: inline-flex;
   align-items: center;
   border: 2px solid #333;

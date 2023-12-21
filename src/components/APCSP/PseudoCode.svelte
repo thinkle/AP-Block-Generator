@@ -96,6 +96,9 @@
 {/if}
 
 <style>
+  :global(div, span) {
+    font-size: var(--font-size);
+  }
   div {
     display: contents;
   }

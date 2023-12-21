@@ -21,12 +21,15 @@
     Button,
     Container,
     Code,
+    MiniButton,
   } from "contain-css-svelte";
   let parsed: AnyElement | AnyElement[] = [];
   $: parsed = parseCode($code);
   $: console.log("parsed: ", parsed);
   let showResult = false;
   let showBlocks = true;
+
+  let resultFontSize = 16;
 </script>
 
 <h1>TypeScript => APCSP PseudoCode Generator</h1>
@@ -52,12 +55,18 @@
         <TabItem on:click={() => (showBlocks = false)} active={!showBlocks}>
           APCSP PseudoCode
         </TabItem>
+        <div style="display: flex; align-items: center;  margin-left: auto;">
+          <MiniButton on:click={() => resultFontSize++}>+</MiniButton>
+          <MiniButton on:click={() => resultFontSize--}>-</MiniButton>
+        </div>
       </TabBar>
-      {#if showBlocks}
-        <PseudoCode node={parsed} />
-      {:else}
-        <PseudoText node={parsed}></PseudoText>
-      {/if}
+      <div style:--font-size="{resultFontSize}px" style="display:contents;">
+        {#if showBlocks}
+          <PseudoCode node={parsed} />
+        {:else}
+          <PseudoText node={parsed}></PseudoText>
+        {/if}
+      </div>
     </div>
   </SplitPane>
   <Container>
