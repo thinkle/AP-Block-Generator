@@ -18,7 +18,6 @@ export function invertCondition(expression: TS.Expression): TS.Expression {
   */
   // Check for simple binary expressions
   if (expression.getKind() === TS.SyntaxKind.BinaryExpression) {
-    debugger;
     const binaryExpr = expression as TS.BinaryExpression;
     const left = binaryExpr.getLeft();
     const right = binaryExpr.getRight();
