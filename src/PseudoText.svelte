@@ -163,15 +163,43 @@
     }
   }
 
+  function pad(n, digits) {
+    let s = String(n);
+    while (s.length < digits) {
+      s = " " + s;
+    }
+    return s;
+  }
+
   $: try {
-    text = processParsedIntoText(node);
+    text = processParsedIntoText(node).trim();
+    if (showLineNumbers || removeBlanks) {
+      let lines = text.split("\n");
+      if (removeBlanks) {
+        lines = lines.filter((line) => line.trim() !== "");
+      }
+      let maxDigits = String(lines.length).length;
+      if (showLineNumbers) {
+        text = lines
+          .map((line, i) => `Line ${pad(i + 1, maxDigits)}: ${line}`)
+          .join("\n");
+      } else {
+        text = lines.join("\n");
+      }
+    }
   } catch (err) {
     console.error(err);
     text = "Error: " + err;
   }
   $: console.log("Wrote: ", text);
+  export let removeBlanks = true;
+  export let showLineNumbers = true;
 </script>
 
+<label>
+  <input type="checkbox" bind:checked={showLineNumbers} /> Show Line Numbers
+  <input type="checkbox" bind:checked={removeBlanks} /> Remove blank lines
+</label>
 <pre>
-  {text}
+{text}
 </pre>
