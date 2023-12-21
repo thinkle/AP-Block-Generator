@@ -16,14 +16,14 @@ export const handleWhileLoop = (
   const invertedCondition = invertCondition(condition);
 
   // Process the body of the while loop
-  const body: Block = {
+  /* const body: Block = {
     element: "block",
     children:
       node.getStatement() instanceof TS.Block
         ? node.getStatement().getStatements().map(processNode)
         : [processNode(node.getStatement())],
-  };
-
+  }; */
+  const body = processNode(node.getStatement());
   return {
     element: "untilLoop",
     condition: processNode(invertedCondition),
