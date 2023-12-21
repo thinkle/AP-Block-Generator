@@ -74,7 +74,12 @@ export const forEach = (
 
   const callbackFunction = tsArgs[0];
   let [body, itemVariableName] = getBodyAndVarFromFunction(callbackFunction);
+  crawlAndTransformReturnStatements(body, (node: ReturnStatement) => {
+    let newNode = node.value;
+    Object.assign(node, newNode);
 
+    //return [node.value, { element: "keyword", value: "CONTINUE" }];
+  });
   return {
     element: "forEach",
     list: processNode(objectNode),
