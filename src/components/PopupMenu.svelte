@@ -23,7 +23,6 @@
   }
 
   function setupPopup() {
-    console.log("Set me up!");
     outerContainer.style.position = "absolute";
     document.body.appendChild(outerContainer);
     outerContainer.appendChild(menu);

@@ -191,7 +191,6 @@
     console.error(err);
     text = "Error: " + err;
   }
-  $: console.log("Wrote: ", text);
   export let removeBlanks = true;
   export let showLineNumbers = true;
 </script>

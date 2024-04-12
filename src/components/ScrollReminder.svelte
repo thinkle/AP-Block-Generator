@@ -11,19 +11,12 @@
   }
 
   function checkScroll() {
-    console.log("Check scroll!");
     leftPosition =
       container.getBoundingClientRect().left + container.clientWidth - 120;
-    console.log("Got element", container, "at", leftPosition);
     if (
       container.scrollHeight - container.scrollTop <=
       container.clientHeight
     ) {
-      console.log(
-        "Still have ",
-        container.scrollHeight - container.scrollTop,
-        "px to go!"
-      );
       hasScrolledToBottom = true;
     } else {
       hasScrolledToBottom = false;
@@ -35,13 +28,11 @@
       container.addEventListener("scroll", checkScroll);
       leftPosition =
         container.getBoundingClientRect().left + container.clientWidth - 120;
-      console.log("Got element", container, "at", leftPosition);
     }
   });
   $: if (container) {
     container.addEventListener("scroll", checkScroll);
     leftPosition = container.getBoundingClientRect().left;
-    console.log("Got element", container, "at", leftPosition);
   }
 
   onDestroy(() => {

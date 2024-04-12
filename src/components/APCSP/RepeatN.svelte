@@ -3,7 +3,6 @@
   import Block from "./Block.svelte";
   import PseudoCode from "./PseudoCode.svelte";
   export let node: P.RepeatExpression;
-  console.log("Got node", node);
 </script>
 
 <div class="shaded round-block">

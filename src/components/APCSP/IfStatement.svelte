@@ -4,7 +4,6 @@
   import PseudoCode from "./PseudoCode.svelte";
 
   export let node: IfStatement;
-  console.log("Got me an if statement", node);
 </script>
 
 {#if node}

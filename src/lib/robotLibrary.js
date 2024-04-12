@@ -1,4 +1,4 @@
-robotBackgroundColors = {
+const robotBackgroundColors = {
   0: "var(--white,white)",
   1: "var(--black,black)",
   2: "var(--target,gold)",
@@ -18,23 +18,34 @@ function RobotGrid(
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 1, 0, 0, 0, 1, 0],
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
     ],
   } = {}
 ) {
+  console.log("Robot Grid!!!", grid);
   if (typeof grid === "string") {
     grid = grid
       .replace(/^\s+/, "")
       .replace(/\s+$/, "")
       .split(/\s*\n\s*/g)
-      .map((line) => Array.from(line).map((s) => Number(s)));
-    console.log("Made grid", grid);
+      .map((line) => Array.from(line).map((s) => (s === "R" ? 3 : Number(s))));
+  }
+  // Check for Robot in grid def...
+  for (let rn = 0; rn < grid.length; rn++) {
+    for (let cn = 0; cn < grid[rn].length; cn++) {
+      if (grid[rn][cn] === "R" || grid[rn][cn] === 3) {
+        console.log("Found a robot!", rn, cn);
+        startX = cn;
+        startY = rn;
+        grid[rn][cn] = 0;
+      }
+    }
   }
   const RIGHT = 0;
   const UP = 1;
@@ -109,6 +120,7 @@ function RobotGrid(
       <div class="controls">
         <label>Speed</label>
         <input class="speed-input" type="range" min="1" max="10" value="${speed}" />
+        <button class="reset">Reset</button>
         <button class="run">Run Program</button>
         <button class="stop" disabled>Stop</button>
       </div>
@@ -117,8 +129,8 @@ function RobotGrid(
     };
     setupHtml();
 
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
+    for (let rn = 0; rn < rows; rn++) {
+      for (let cn = 0; cn < cols; cn++) {
         let cell = document.createElement("div");
         cell.style.width = `${rowHeight}px`;
         cell.style.height = `${colWidth}px`;
@@ -126,7 +138,7 @@ function RobotGrid(
         cell.style.boxSizing = "border-box";
         cell.style.display = "inline-block";
         cell.style.position = "relative";
-        cell.style.backgroundColor = robotBackgroundColors[grid[row][col]];
+        cell.style.backgroundColor = robotBackgroundColors[grid[rn][cn]];
         cell.style.transition = "background-color 0.3s ease";
         this.element.querySelector(".robot-grid").appendChild(cell);
       }
@@ -141,6 +153,14 @@ function RobotGrid(
       });
     this.element.querySelector(".stop").addEventListener("click", () => {
       interrupt = true;
+    });
+    this.element.querySelector(".reset").addEventListener("click", () => {
+      row = startY;
+      col = startX;
+      heading = RIGHT;
+      this.robotElement.style.left = `${colWidth * startX}px`;
+      this.robotElement.style.top = `${rowHeight * startY}px`;
+      this.robotElement.style.transform = `rotate(-${heading * 90}deg)`;
     });
 
     this.robotElement = this.element.querySelector(".robot");
@@ -254,42 +274,161 @@ function RobotGrid(
     this.element.querySelector(".run").disabled = false;
   };
 }
-rg = null;
-initRobots = () => {
+let rg = null;
+const initRobots = () => {
   let robotsDiv = document.querySelector("#robots");
   rg = new RobotGrid(robotsDiv);
 };
-SETUP_ROBOTS = (settings = {}) => {
+const SETUP_ROBOTS = (settings = {}) => {
   let robotsDiv = document.querySelector("#robots");
   rg = new RobotGrid(robotsDiv, settings);
 };
-TURN_LEFT = () => {
+const ROTATE_LEFT = () => {
   if (!rg) {
     initRobots();
   }
   rg.turn_left();
 };
-TURN_RIGHT = () => {
+const ROTATE_RIGHT = () => {
   if (!rg) {
     initRobots();
   }
   rg.turn_right();
 };
-MOVE_FORWARD = () => {
+const MOVE_FORWARD = () => {
   if (!rg) {
     initRobots();
   }
   rg.move_forward();
 };
-CAN_MOVE = () => {
+const CAN_MOVE = () => {
   if (!rg) {
     initRobots();
   }
   return rg.can_move();
 };
 
-right = TURN_RIGHT;
-left = TURN_LEFT;
-forward = MOVE_FORWARD;
-canMove = CAN_MOVE;
-setupRobots = SETUP_ROBOTS;
+const right = ROTATE_RIGHT;
+const left = ROTATE_LEFT;
+const forward = MOVE_FORWARD;
+const canMove = CAN_MOVE;
+const setupRobots = SETUP_ROBOTS;
+
+const PROBLEM_1 = () => {
+  setupRobots({
+    grid: `
+3002
+0000
+0000
+0000`,
+    rows: 4,
+    cols: 4,
+  });
+};
+
+const PROBLEM_2 = () => {
+  setupRobots({
+    grid: `
+3010
+0010
+0020
+0000`,
+    rows: 4,
+    cols: 4,
+  });
+};
+
+const PROBLEM_3 = () => {
+  setupRobots({
+    grid: `
+3000
+0110
+0112
+0000`,
+    rows: 4,
+    cols: 4,
+  });
+};
+
+const PROBLEM_4 = () => {
+  setupRobots({
+    grid: `
+3010
+1010
+1000
+1102`,
+    rows: 4,
+    cols: 4,
+  });
+};
+
+const PROBLEM_5 = () => {
+  setupRobots({
+    grid: `
+3001000000
+1101110000
+1100011000
+1111011100
+000100011
+00011101110
+00011100010
+0000111101100
+0000111100010
+00001111110111
+00000111112`,
+    rows: 11,
+    cols: 11,
+  });
+};
+
+const PROBLEM_6 = () => {
+  setupRobots({
+    grid: `
+200000000000
+111111111110
+000000000010
+011111111010
+010000001010
+010111101010
+010103101010
+010100001010
+010111111010
+010000000010
+011111111110
+000000000000`,
+    rows: 12,
+    cols: 12,
+  });
+};
+
+const PROBLEM_7 = () => {
+  setupRobots({
+    grid: `
+3011111100
+1001211110
+1001011110
+0011011100
+1000011110
+1111111110`,
+    rows: 6,
+    cols: 6,
+  });
+};
+const PROBLEM_8 = () => {
+  setupRobots({
+    grid: `
+3000000000
+1111111110
+0000000000
+0111111111
+0000000000
+1111111110
+2000000000
+1111110011
+0000001001
+0111111111
+`,
+    rows: 10,
+    cols: 10,
+  });
+};

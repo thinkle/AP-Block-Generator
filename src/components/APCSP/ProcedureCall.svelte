@@ -2,7 +2,6 @@
   import type { ProcedureCall } from "../../lib/pseudocode";
   import PseudoCode from "./PseudoCode.svelte";
   export let node: ProcedureCall;
-  console.log("Got me a procedure call", node);
 </script>
 
 <div class="line rounded-inline">

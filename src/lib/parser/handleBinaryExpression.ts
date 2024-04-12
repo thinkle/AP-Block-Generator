@@ -53,7 +53,6 @@ export function handleBinaryExpression(
   }
 
   if (["+=", "-=", "*=", "/=", "%="].includes(operator)) {
-    console.log("Long operator", operator);
     let apCspOperator = translateOperator(operator[0]);
     return {
       element: "mathExpression",

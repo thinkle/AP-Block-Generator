@@ -25,8 +25,8 @@
   } from "contain-css-svelte";
   let parsed: AnyElement | AnyElement[] = [];
   $: parsed = parseCode($code);
-  $: console.log("parsed: ", parsed);
   let showResult = false;
+  let showMode: "pseudo" | "blocks" | "result" = "pseudo";
   let showBlocks = true;
 
   let resultFontSize = 16;
@@ -49,22 +49,50 @@
     </div>
     <div slot="right">
       <TabBar>
-        <TabItem on:click={() => (showBlocks = true)} active={showBlocks}>
+        <TabItem
+          on:click={() => (showMode = "blocks")}
+          active={showMode == "blocks"}
+        >
           APCSP Blocks
         </TabItem>
-        <TabItem on:click={() => (showBlocks = false)} active={!showBlocks}>
+        <TabItem
+          on:click={() => (showMode = "pseudo")}
+          active={showMode == "pseudo"}
+        >
           APCSP PseudoCode
         </TabItem>
+        {#if showMode}
+          <TabItem
+            on:click={() => (showMode = "result")}
+            active={showMode === "result"}
+          >
+            Result
+          </TabItem>
+        {/if}
         <div style="display: flex; align-items: center;  margin-left: auto;">
           <MiniButton on:click={() => resultFontSize++}>+</MiniButton>
           <MiniButton on:click={() => resultFontSize--}>-</MiniButton>
         </div>
       </TabBar>
       <div style:--font-size="{resultFontSize}px" style="display:contents;">
-        {#if showBlocks}
+        {#if showMode == "blocks"}
           <PseudoCode node={parsed} />
-        {:else}
+        {:else if showMode == "pseudo"}
           <PseudoText node={parsed}></PseudoText>
+        {:else if showMode == "result"}
+          {#if showResult}
+            <section class="result">
+              <Button on:click={() => (showResult = false)}>Hide</Button>
+
+              <CodeResult
+                height={1200}
+                js={$code}
+                onWindowLoaded={() => console.log("Loaded code")}
+              />
+            </section>
+          {:else}
+            <Button on:click={() => (showResult = true)}>Run</Button>
+          {/if}
         {/if}
       </div>
     </div>
@@ -76,6 +104,28 @@
       appear on the right. If I implemented the syntax you're using (which
       should be most syntax), it should show up translated into APCSP code.
     </p>
+    <p>
+      We also support some APCSP functions, such as RANDOM, DISPLAY, and INPUT.
+    </p>
+    <p>
+      I've also inputted APCSP style robot code, which you can access by calling
+      methods such as ROTATE_RIGHT or MOVE_FORWARD or the more JS-like
+      alternatives I've put in which are forward(), right(), left(), etc.
+    </p>
+    <p>For problems, try typing:</p>
+    <ul>
+      <li>PROBLEM_1()</li>
+      <li>PROBLEM_2()</li>
+      <li>PROBLEM_3()</li>
+      <li>etc.</li>
+    </ul>
+    <p>The full list of robot functions is:</p>
+    <ul>
+      <li>forward() or MOVE_FORWARD()</li>
+      <li>left() or ROTATE_LEFT()</li>
+      <li>right() or ROTATE_RIGHT()</li>
+      <li>canMove() or CAN_MOVE()</li>
+    </ul>
     <p>
       Some structures, such as objects, aren't supported in the APCSP syntax, so
       YMMV.
@@ -115,18 +165,6 @@ let pfruits = fruits.filter(fruit => fruit[0]=='p');
     </ul>
   </Container>
 </Page>
-<section>
-  {#if showResult}
-    <section class="result">
-      <Button on:click={() => (showResult = false)}>Hide</Button>
-      <CodeResult
-        height={200}
-        js={$code}
-        onWindowLoaded={() => console.log("Loaded code")}
-      />
-    </section>
-  {/if}
-</section>
 
 <style>
   h1 {

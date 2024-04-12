@@ -4,7 +4,6 @@
   import * as P from "../../lib/pseudocode";
   import PseudoCode from "./PseudoCode.svelte";
   export let node: P.ListIndex;
-  console.log("Got node", node);
 </script>
 
 <span>

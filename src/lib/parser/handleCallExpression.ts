@@ -34,6 +34,21 @@ const treatAsInput = (args: ExpressionElement[]) => ({
   args,
   element: "procedureCall",
 });
+const treatAsTurnLeft = (args: ExpressionElement[]) => ({
+  name: "TURN_LEFT",
+  args,
+  element: "procedureCall",
+});
+const treatAsTurnRight = (args: ExpressionElement[]) => ({
+  name: "TURN_RIGHT",
+  args,
+  element: "procedureCall",
+});
+const treatAsForward = (args: ExpressionElement[]) => ({
+  name: "MOVE_FORWARD",
+  args,
+  element: "procedureCall",
+});
 
 export const methodHandlers = {
   /*  Array methods */
@@ -68,6 +83,21 @@ export const methodHandlers = {
     args: ExpressionElement[],
     fullNode: TS.Node
   ) => treatAsInput(args),
+  left: (
+    objectNode: TS.LeftHandSideExpression,
+    args: ExpressionElement[],
+    fullNode: TS.Node
+  ) => treatAsTurnLeft(args),
+  right: (
+    objectNode: TS.LeftHandSideExpression,
+    args: ExpressionElement[],
+    fullNode: TS.Node
+  ) => treatAsTurnRight(args),
+  forward: (
+    objectNode: TS.LeftHandSideExpression,
+    args: ExpressionElement[],
+    fullNode: TS.Node
+  ) => treatAsForward(args),
 };
 
 export function handleCallExpression(node: TS.Node): ProcedureCall {
@@ -90,12 +120,24 @@ export function handleCallExpression(node: TS.Node): ProcedureCall {
       }
     }
   }
+  let expressionName = callExpressionText;
+  if (callExpressionText === "left") {
+    expressionName = "ROTATE_LEFT";
+  } else if (callExpressionText === "right") {
+    expressionName = "ROTATE_RIGHT";
+  } else if (callExpressionText == "forward") {
+    expressionName = "MOVE_FORWARD";
+  } else if (callExpressionText == "canMove") {
+    expressionName = "CAN_MOVE";
+  } else if (callExpressionText == "randInt") {
+    expressionName = "RANDOM_INT";
+  }
 
   // Special case for console.log and window.alert
   // Default case for other call expressions
   return {
     element: "procedureCall",
-    name: callExpressionText,
+    name: expressionName,
     args,
   };
 }

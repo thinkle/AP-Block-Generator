@@ -35,7 +35,6 @@
 
   let resultWindow: Window;
   function onIframeLoad(w: Window) {
-    console.log("iframe loaded!", w);
     resultWindow = w;
   }
 

@@ -4,7 +4,6 @@
   import * as P from "../../lib/pseudocode";
 
   export let node: P.ReturnStatement;
-  console.log("Got node", node);
 </script>
 
 <div class="line">

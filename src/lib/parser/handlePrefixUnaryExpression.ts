@@ -21,7 +21,6 @@ export function handlePrefixUnaryExpression(
   if (!TS.Node.isPrefixUnaryExpression(node)) {
     throw new Error("Node is not a Prefix Unary Expression");
   }
-  console.log("Handle unary", node);
   const operator = node.getOperatorToken();
   const operand = processNode(node.getOperand());
 

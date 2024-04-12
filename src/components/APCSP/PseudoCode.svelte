@@ -20,6 +20,44 @@
   import ListIndexValue from "./ListIndexValue.svelte";
   import UntilLoop from "./UntilLoop.svelte";
   export let node: P.AnyElement | P.AnyElement[];
+
+  function jsToString(node) {
+    if (!node) return "";
+    if (Array.isArray(node)) {
+      return node.map(jsToString).join(",\n\t");
+    }
+    switch (node.element) {
+      case "OpenBraceToken":
+        return "";
+      case "CloseBraceToken":
+        return "";
+      case "ColonToken":
+        return ":";
+      case "variable":
+        return node.name;
+      case "value":
+        if (node.type === "string") {
+          return `"${node.value}"`;
+        } else {
+          return node.value;
+        }
+
+      case "ObjectLiteralExpression":
+        let properties = node.children
+          .map((child) => jsToString(child))
+          .join(", ");
+        return `{ ${properties} }`;
+      case "PropertyAssignment":
+        return `${node.children[0].name}: ${jsToString(node.children[1])}`;
+      default:
+        // Recursively process children if the element is not recognized
+        if (node.children && node.children.length) {
+          return node.children.map(jsToString).join(", ");
+        }
+        // Return raw value or name if no specific handling is defined
+        return node.value || node.name || "undefined";
+    }
+  }
 </script>
 
 {#if Array.isArray(node)}
@@ -83,14 +121,14 @@
     {:else if node.element == "block"}
       <Block body={node.children} />
     {:else}
-      <div>Unhandled element {node.element}</div>
-
-      {JSON.stringify(node)}
-      {#if node.children}
+      <div>Unhandled element: {node.element}</div>
+      <div>JS TO STRING: {jsToString(node)}</div>
+      <div>JSONIFY: {JSON.stringify(node)}</div>
+      <!-- {#if node.children}
         {#each node.children as child}
           <svelte:self node={child} />
         {/each}
-      {/if}
+      {/if} -->
     {/if}
   </div>
 {/if}

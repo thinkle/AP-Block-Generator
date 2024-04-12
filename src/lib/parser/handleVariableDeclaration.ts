@@ -30,7 +30,6 @@ export function handleVariableDeclaration(
       operator: ASSIGN,
     };
   } else {
-    console.log("Ignoring uninitialized variable!", varName);
     return {
       element: "empty",
     };

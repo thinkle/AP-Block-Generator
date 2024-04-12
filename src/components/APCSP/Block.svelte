@@ -3,7 +3,6 @@
   export let body: StatementElement[] | Block;
   let children = body.children || body;
   $: children = body.children || body;
-  console.log("Got block body", body);
   import PseudoCode from "./PseudoCode.svelte";
 </script>
 
