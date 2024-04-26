@@ -21,6 +21,7 @@ export function handleForLoop(
   const body = processNode(node.getStatement());
   let variableName = "";
   let bodyUsesVariable = false;
+
   if (initializer && initializer.getDeclarations()?.length) {
     variableName = initializer.getDeclarations()[0].getName();
     crawl(body, (node) => {
@@ -29,8 +30,7 @@ export function handleForLoop(
       }
     });
   }
-  // Check if the loop matches the pattern:
-  // for (let i = n; i < N; i++)
+
   if (
     !bodyUsesVariable &&
     TS.Node.isVariableDeclarationList(initializer) &&
@@ -38,15 +38,24 @@ export function handleForLoop(
     condition &&
     TS.Node.isBinaryExpression(condition) &&
     condition.getOperatorToken().getText() === "<" &&
-    TS.Node.isNumericLiteral(condition.getRight()) &&
     TS.Node.isPostfixUnaryExpression(incrementor) &&
     incrementor.getOperatorToken() === TS.SyntaxKind.PlusPlusToken
   ) {
-    const limitNumber = parseInt(condition.getRight().getText());
-    const startNumber = parseInt(
-      initializer.getDeclarations()[0].getInitializer().getText()
-    );
-    const n = limitNumber - startNumber;
+    // Handle numeric and variable limits differently
+    const rightOperand = condition.getRight();
+    let n;
+    if (TS.Node.isNumericLiteral(rightOperand)) {
+      const limitNumber = parseInt(rightOperand.getText());
+      const startNumber = parseInt(
+        initializer.getDeclarations()[0].getInitializer().getText()
+      );
+      n = limitNumber - startNumber;
+    } else if (TS.Node.isIdentifier(rightOperand)) {
+      n = rightOperand.getText(); // Capture the variable name
+    } else {
+      throw new Error("Unsupported loop condition");
+    }
+
     return {
       element: "repeatN",
       n: n,
