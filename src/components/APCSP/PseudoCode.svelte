@@ -23,8 +23,11 @@
 
   function jsToString(node) {
     if (!node) return "";
-    if (Array.isArray(node)) {
-      return node.map(jsToString).join(",\n\t");
+    if (!node.element && Array.isArray(node)) {
+      return node
+        .map(jsToString)
+        .filter((v) => v)
+        .join(",\n\t");
     }
     switch (node.element) {
       case "OpenBraceToken":
@@ -38,24 +41,32 @@
       case "value":
         if (node.type === "string") {
           return `"${node.value}"`;
+        } else if (node.type === "list") {
+          return `[${node.value.map(jsToString).join(", ")}]`;
         } else {
           return node.value;
         }
-
       case "ObjectLiteralExpression":
         let properties = node.children
           .map((child) => jsToString(child))
-          .join(", ");
+          .filter((child) => child)
+          .join(", \n");
         return `{ ${properties} }`;
       case "PropertyAssignment":
-        return `${node.children[0].name}: ${jsToString(node.children[1])}`;
+        let v = `${jsToString(node.children[0])}: ${jsToString(
+          node.children[2]
+        )}`;
+        console.log("PRoperty assignment", node, "=>", v);
+        return v;
+      case "NoSubstitutionTemplateLiteral":
+        return `"..."`;
       default:
         // Recursively process children if the element is not recognized
         if (node.children && node.children.length) {
           return node.children.map(jsToString).join(", ");
         }
         // Return raw value or name if no specific handling is defined
-        return node.value || node.name || "undefined";
+        return node.value || node.name || "";
     }
   }
 </script>
@@ -121,9 +132,9 @@
     {:else if node.element == "block"}
       <Block body={node.children} />
     {:else}
-      <div>Unhandled element: {node.element}</div>
-      <div>JS TO STRING: {jsToString(node)}</div>
-      <div>JSONIFY: {JSON.stringify(node)}</div>
+      <div class="unknown">
+        {jsToString(node)}
+      </div>
       <!-- {#if node.children}
         {#each node.children as child}
           <svelte:self node={child} />
@@ -148,5 +159,11 @@
   }
   .comment {
     color: #ef640e;
+  }
+  .unknown {
+    background-color: #ccc;
+    border: 2px solid #222;
+    display: inline-block;
+    padding: 8px;
   }
 </style>
