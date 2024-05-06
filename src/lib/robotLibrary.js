@@ -51,6 +51,8 @@ function RobotGrid(
   const UP = 1;
   const LEFT = 2;
   const DOWN = 3;
+  const FORWARD = 4;
+  const BACKWARD = 5;
   let row = startY;
   let col = startX;
   let heading = RIGHT;
@@ -181,14 +183,42 @@ function RobotGrid(
     row += y;
     col += x;
   };
-  this.can_move = () => {
-    if (heading == LEFT) {
+  this.can_move = (direction = FORWARD) => {
+    /* 
+      directions are:                      1
+      const RIGHT = 0;                   2 R 0
+      const UP = 1;                        3
+      const LEFT = 2;
+      const DOWN = 3;
+      // So moving to the "left" is adding 1
+      // to thr right is subtracting 1
+    */
+    if (direction === undefined) {
+      direction = FORWARD;
+    }
+    let directionToCheck;
+    switch (direction) {
+      case FORWARD:
+        directionToCheck = heading;
+        break;
+      case BACKWARD:
+        directionToCheck = (heading + 2) % 4;
+        break;
+      case RIGHT:
+        directionToCheck = (4 + heading - 1) % 4;
+        break;
+      case LEFT:
+        directionToCheck = (heading + 1) % 4;
+        break;
+    }
+
+    if (directionToCheck == LEFT) {
       return col > 0 && grid[row][col - 1] != 1;
-    } else if (heading == RIGHT) {
+    } else if (directionToCheck == RIGHT) {
       return col < cols - 1 && grid[row][col + 1] != 1;
-    } else if (heading == UP) {
+    } else if (directionToCheck == UP) {
       return row > 0 && grid[row - 1][col] != 1;
-    } else if (heading == DOWN) {
+    } else if (directionToCheck == DOWN) {
       return row < rows - 1 && grid[row + 1][col] != 1;
     }
   };
@@ -243,6 +273,11 @@ function RobotGrid(
       col: col,
     });
   };
+
+  this.goal_reached = () => {
+    return grid[row][col] == 2;
+  };
+
   this.run = async () => {
     interrupt = false;
     this.element.querySelector(".run").disabled = true;
@@ -301,18 +336,32 @@ const MOVE_FORWARD = () => {
   }
   rg.move_forward();
 };
-const CAN_MOVE = () => {
+const CAN_MOVE = (direction = FORWARD) => {
   if (!rg) {
     initRobots();
   }
-  return rg.can_move();
+  return rg.can_move(direction);
 };
+const GOAL_REACHED = () => {
+  if (!rg) {
+    initRobots();
+  }
+  return rg.goal_reached();
+};
+
+const RIGHT = 0;
+const UP = 1;
+const LEFT = 2;
+const DOWN = 3;
+const FORWARD = 4;
+const BACKWARD = 5;
 
 const right = ROTATE_RIGHT;
 const left = ROTATE_LEFT;
 const forward = MOVE_FORWARD;
 const canMove = CAN_MOVE;
 const setupRobots = SETUP_ROBOTS;
+const goalReached = GOAL_REACHED;
 
 const PROBLEM_1 = () => {
   setupRobots({
