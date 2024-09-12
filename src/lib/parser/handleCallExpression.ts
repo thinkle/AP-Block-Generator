@@ -73,12 +73,22 @@ export const methodHandlers = {
     args: ExpressionElement[],
     fullNode: TS.Node
   ) => treatAsDISPLAY(args),
+  output: (
+    objectNode: TS.LeftHandSideExpression,
+    args: ExpressionElement[],
+    fullNode: TS.Node
+  ) => treatAsDISPLAY(args),
   alert: (
     objectNode: TS.LeftHandSideExpression,
     args: ExpressionElement[],
     fullNode: TS.Node
   ) => treatAsDISPLAY(args),
   prompt: (
+    objectNode: TS.LeftHandSideExpression,
+    args: ExpressionElement[],
+    fullNode: TS.Node
+  ) => treatAsInput(args),
+  readText: (
     objectNode: TS.LeftHandSideExpression,
     args: ExpressionElement[],
     fullNode: TS.Node
