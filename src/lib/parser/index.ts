@@ -113,7 +113,28 @@ const nodeHandlers: Record<TS.SyntaxKind, NodeHandler> = {
       };
     }
   },
-  // ... Add more handlers as needed
+  // Handle await and new (we just ignore them and treat
+  // like function calls)
+  [TS.SyntaxKind.AwaitExpression]: (node) => {
+    const awaitExpression = node as TS.AwaitExpression;
+    const expression = awaitExpression.getExpression();
+    return processNode(expression);
+  },
+  [TS.SyntaxKind.NewExpression]: (node) => {
+    const newExpression = node as TS.NewExpression;
+    const expression = newExpression.getExpression();
+    const args = newExpression.getArguments().map((arg) => processNode(arg));
+    const expressionName = expression.getText();
+    return {
+      element: "procedureCall",
+      name: expressionName,
+      args,
+    };
+  },
+  // Handle items we want to not exist in our pseudocode
+  // output...
+  [TS.SyntaxKind.EmptyStatement]: ignore,
+  [TS.SyntaxKind.ImportDeclaration]: ignore,
 };
 
 export function processNode(
