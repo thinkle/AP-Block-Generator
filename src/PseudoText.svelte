@@ -20,6 +20,41 @@
     if (node.element == "value" && node.type == "number") {
       return `${Number(node.value) + 1}`;
     } else {
+
+        // special case -1 for decrementing e.g.
+        // last_item = list[list.length - 1] which we 
+        // want to turn into just
+        // last_item = list[LENGTH(list)];
+        /* Example:
+        {
+            "element": "variable",
+            "name": "utensils"
+        }
+        {
+            "element": "mathExpression",
+            "operator": "-",
+            "left": {
+                "element": "procedureCall",
+                "name": "LENGTH",
+                "args": [
+                    {
+                        "element": "variable",
+                        "name": "utensils"
+                    }
+                ]
+            },
+            "right": {
+                "element": "value",
+                "type": "number",
+                "value": "1"
+            }
+        }*/
+        if (node.element === "mathExpression" && node.operator === "-") {
+            if (node.right.element === "value" && node.right.value === "1") {
+                return processParsedIntoText(node.left);
+            }
+        }
+      
       return processParsedIntoText({
         element: "mathExpression",
         operator: "+",
