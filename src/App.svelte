@@ -1,6 +1,6 @@
 <script lang="ts">
-  import "contain-css-svelte/themes/typography-airy.css";
   import "contain-css-svelte/vars/defaults.css";
+  import "contain-css-svelte/themes/typography-airy.css";
   import "contain-css-svelte/themes/light.css";
   import PseudoText from "./PseudoText.svelte";
 

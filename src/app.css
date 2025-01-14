@@ -39,10 +39,10 @@
   font-weight: bold;
 }
 .white {
-  background-color: white;
+  background-color: var(--white);
 }
 .shaded {
-  background-color: #cdc4c4;
+  background-color: var(--secondary-bg);
 }
 .value.list {
   display: inline-flex;
