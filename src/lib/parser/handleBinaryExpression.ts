@@ -1,8 +1,8 @@
 import * as TS from "ts-morph";
-import type { MathExpression, ExpressionElement } from "./pseudocode";
+import type { MathExpression, ExpressionElement, ProcedureCall } from "../pseudocode";
 import { processNode, ASSIGN } from ".";
-import type ProcedureCall from "../../components/APCSP/ProcedureCall.svelte";
 import { isStringType } from "./utils/isStringType";
+import { handleSpreadAssignment } from "./handleSpread";
 
 export function translateOperator(operator: string): string {
   switch (operator) {
@@ -66,6 +66,13 @@ export function handleBinaryExpression(
       },
     };
   }
+
+  if (operator === '=') {
+    // special case assignment operator...
+    if (right.type === 'list' && rightNode.getChildrenOfKind(TS.SyntaxKind.SpreadElement).length > 0) {
+      return handleSpreadAssignment(left, right);
+    }
+  } 
 
   // Translate TypeScript operators to APCSP-style operators if needed
   const apCspOperator = translateOperator(operator);
