@@ -31,6 +31,38 @@ export const push = (
   };
 };
 
+export const pop = (
+  objectNode: TS.LeftHandSideExpression,
+  args: ExpressionElement[],
+  fullNode: TS.Node
+) => {
+  return {
+    name: "REMOVE",
+    args: [processNode(objectNode), {
+      element : 'procedureCall',
+      name : 'LENGTH',
+      args : [processNode(objectNode)]
+    }],
+    element: "procedureCall",
+  };
+}
+
+
+export const shift = (
+  objectNode: TS.LeftHandSideExpression,
+  args: ExpressionElement[],
+  fullNode: TS.Node
+) => {
+  return {
+    name: "REMOVE",
+    args: [processNode(objectNode), 
+        { element : 'value', value : 1 }
+    ],    
+    element: "procedureCall",
+  };
+}
+
+
 export const splice = (
   objectNode: TS.LeftHandSideExpression,
   args: ExpressionElement[],

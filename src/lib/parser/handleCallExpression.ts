@@ -12,6 +12,8 @@ import { handleFunctionDeclaration } from "./handleFunctionDeclaration";
 import type MathExpression from "../../components/APCSP/MathExpression.svelte";
 import {
   push,
+  pop,
+  shift,
   splice,
   forEach,
   map,
@@ -53,6 +55,8 @@ const treatAsForward = (args: ExpressionElement[]) => ({
 export const methodHandlers = {
   /*  Array methods */
   push,
+  pop,
+  shift,
   splice,
   forEach,
   map,
