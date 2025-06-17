@@ -42,7 +42,12 @@
         {#if showResult}
           <Button on:click={() => (showResult = false)}>Reset</Button>
         {:else}
-          <Button on:click={() => (showResult = true)}>Run</Button>
+          <Button
+            on:click={() => {
+              showResult = true;
+              showMode = "result";
+            }}>Run</Button
+          >
         {/if}
       </Bar>
       <CodeMirror bind:value={$code} lang={javascript()} />
@@ -91,7 +96,12 @@
               />
             </section>
           {:else}
-            <Button on:click={() => (showResult = true)}>Run</Button>
+            <Button
+              on:click={() => {
+                showResult = true;
+                showMode = "result";
+              }}>Run</Button
+            >
           {/if}
         {/if}
       </div>
