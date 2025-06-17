@@ -4,6 +4,8 @@
   // ... [Rest of the Code]
   import robotLibrary from "../lib/robotLibrary.js?raw";
   import baseLibrary from "../lib/baseLibrary.js?raw";
+  import textInterfaceBundle from "../lib/text-interface.bundle.iife.js?raw";
+  import textUtilityFunctions from "../lib/textLibrary.js?raw";
   import { sanitize } from "../lib/sanitizer";
   export let js = "";
   export let css = "";
@@ -13,14 +15,26 @@
   let iframe: HTMLIFrameElement;
 
   const updateIframe = () => {
-    if (!iframe || !iframe.contentWindow) {
+    if (!iframe) {
       return;
     }
-    const doc = iframe.contentWindow.document;
     const sanitizedJs = sanitize(js);
     console.log("Sanitized JS is :", sanitizedJs);
-    doc.open();
-    doc.write(
+    const jsString = `
+      console.log('Loading script');             
+      ${textInterfaceBundle}
+      console.log('Loading TI');
+      ${textUtilityFunctions}
+      console.log('Loading robots');
+      ${robotLibrary}
+      console.log('Loading base');
+      ${baseLibrary}
+      console.log('Injecting sanitized JS');
+      ${sanitizedJs}
+      `;
+    console.log("Full JS String is :", jsString);
+    console.log("User JS is : ", sanitizedJs);
+    const htmlString =
       `
       <!DOCTYPE html>
       <html lang="en">
@@ -33,19 +47,19 @@
       </head>
       <body>
           ${html}
-          <div id="robots"></div>
-          <scr` +
-        `ipt type="module">
-              ${robotLibrary}
-              ${baseLibrary}
-              ${sanitizedJs}
-          </scr` +
-        `ipt>
-      </body>
-      </html>
-    `
-    );
-    doc.close();
+          <div id="text"></div>
+          <div id="robots"></div>          
+          ` +
+      ` <scr` +
+      `ipt type="module"> 
+          ${jsString}
+        </scr` +
+      `ipt>
+    </body>
+    </html>
+    `;
+
+    iframe.srcdoc = htmlString;
   };
 
   $: js && updateIframe();
@@ -54,13 +68,17 @@
 
   onMount(() => {
     updateIframe();
-    if (onWindowLoaded) {
+    if (onWindowLoaded && iframe.contentWindow) {
       onWindowLoaded(iframe.contentWindow);
     }
   });
 </script>
 
-<iframe style:--height={`${height}px`} bind:this={iframe}></iframe>
+<iframe
+  style:--height={`${height}px`}
+  bind:this={iframe}
+  title="Code execution result"
+></iframe>
 
 <style>
   iframe {

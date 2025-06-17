@@ -16,15 +16,6 @@ function checkForInfinite(identifier) {
   }
 }
 
-// Implement basic inputs and outputs...
-
-function INPUT() {
-  return window.prompt("Input: ");
-}
-
-function DISPLAY(text) {
-  window.alert(text);
-}
 
 function RANDOM(a, b) {
   let range = b - a;

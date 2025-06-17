@@ -17,13 +17,22 @@
     if (word.from === word.to) return null;
 
     let completions = [
-      ...["forward", "left", "right", "canMove", "randInt", "goalReached"].map(
-        (name) => ({
-          label: name,
-          type: "function",
-          apply: `${name}()`,
-        })
-      ),
+      ...[
+        "forward",
+        "left",
+        "right",
+        "canMove",
+        "randInt",
+        "goalReached",
+        "input",
+        "output",
+        "prompt",
+        "display",
+      ].map((name) => ({
+        label: name,
+        type: "function",
+        apply: `${name}()`,
+      })),
       ...[
         "INPUT",
         "DISPLAY",

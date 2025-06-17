@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:text-interface": "vite build --config vite.lib.config.ts",
+    "build:all": "npm run build:text-interface && npm run build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
@@ -32,6 +34,7 @@
     "markdown-it-highlightjs": "^4.0.1",
     "prettier": "^3.0.3",
     "svelte-highlight": "^7.3.0",
+    "text-interface": "^1.1.0",
     "ts-morph": "^21.0.1"
   }
 }
